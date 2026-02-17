@@ -23,9 +23,10 @@ A World of Warcraft addon for The War Within (11.0+) that helps you send friendl
 - **Smart Roster Tracking**: Tracks all teammates, even those who leave early
 - **Customizable Messages**: Choose from friendly presets or add your own custom lines
 - **PVP-Friendly Messages**: Short, neutral, positive - avoid sarcasm and drama
-- **PVP Profile Integration**: Quick access to player PvP rankings via check-pvp.fr links
-  - Click the PvP icon next to player names to view their check-pvp.fr profile URL
-  - Easily check teammate rankings, best CR, and alt character information
+- **PVP Profile Integration**: Quick access to player PvP rankings via check-pvp.fr
+  - Click player names to open their check-pvp.fr profile URL
+  - Hover over the PvP icon to see key information (CR, performance, alts, achievements)
+  - Easily check teammate rankings and alt character information
 - **Safety Modes**: 
   - SAFE mode (preview only, no messages sent)
   - LIVE mode (actually sends whispers)
@@ -126,16 +127,15 @@ Following the core principle: **"In PVP less talk is better... but many times yo
 
 The addon integrates with [check-pvp.fr](https://check-pvp.fr) to provide quick access to player PvP rankings:
 
-- **PVP Icon**: Next to each player name, you'll see a clickable PvP icon
-- **Check Rankings**: Click the icon to get a copyable URL to the player's check-pvp.fr profile
-- **Profile Information**: The check-pvp.fr site shows:
-  - Current and best CR (Combat Rating) for the character
-  - Historical season performance
-  - Alt character information and their best ratings
-  - Achievement dates and milestones
+- **Clickable Player Names**: Click on any player name to open a dialog with their check-pvp.fr profile URL for easy copying
+- **PVP Icon Tooltip**: Hover over the PvP icon next to player names to see key information available on check-pvp.fr:
+  - Current & Best CR (Combat Rating)
+  - Season Performance
+  - Alt Characters
+  - Achievement History
 - **Quick Lookup**: Use this to quickly assess teammate skill levels or find players for future matches
 
-**Note**: The check-pvp.fr URL is automatically generated based on the player's name and realm. The feature currently defaults to EU region servers.
+**Note**: The check-pvp.fr URL is automatically generated based on the player's name and realm. The feature currently defaults to EU region servers. WoW addons cannot directly open external URLs or fetch external data, so the URL must be copied and pasted into a browser.
 
 ## How It Works
 
