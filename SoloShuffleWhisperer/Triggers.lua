@@ -61,6 +61,12 @@ f:SetScript("OnEvent", function(self, event, ...)
         arenaPrepsThisMatch = 0
         
     elseif event == "ARENA_PREP_OPPONENT_SPECIALIZATIONS" then
+        -- Reset counter when entering new arena instance
+        local _, instanceType = IsInInstance()
+        if instanceType == "arena" and arenaPrepsThisMatch >= 6 then
+            arenaPrepsThisMatch = 0
+        end
+        
         -- Count arena preps to detect end of 6-round shuffle
         arenaPrepsThisMatch = arenaPrepsThisMatch + 1
         
@@ -73,6 +79,7 @@ f:SetScript("OnEvent", function(self, event, ...)
                 local _, instanceType = IsInInstance()
                 if instanceType ~= "arena" then
                     OnMatchComplete()
+                    arenaPrepsThisMatch = 0
                 end
             end)
         end

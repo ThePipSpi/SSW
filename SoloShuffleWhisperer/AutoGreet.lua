@@ -23,7 +23,11 @@ function SSW.AutoGreet.SendGreeting()
     
     if not IsInGroup() then return end
     
-    local greeting = GREETINGS[math.random(1, #GREETINGS)]
+    local greetIndex = 1
+    if type(math.random) == "function" then
+        greetIndex = math.random(1, #GREETINGS)
+    end
+    local greeting = GREETINGS[greetIndex]
     SendChatMessage(greeting, "PARTY")
     lastGreetedAt = now
     

@@ -11,6 +11,9 @@ SSW.PartySnapshot = SSW.PartySnapshot or {
 }
 
 -- Helper: get role from spec name (best effort via known spec IDs 1-500)
+-- Note: 500 is chosen as a safe upper bound. As of The War Within (11.0),
+-- there are ~40 specializations with IDs below 500. If Blizzard adds specs
+-- beyond ID 500 in future expansions, this limit should be increased.
 local function GetSpecInfo(specName)
     if not specName or specName == "" then return nil, "DAMAGER" end
     if not GetSpecializationInfoByID then return nil, "DAMAGER" end
