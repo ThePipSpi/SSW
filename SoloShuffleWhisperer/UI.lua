@@ -40,8 +40,18 @@ local function RoleIconTag(role, size)
     size = size or 14
     if not CreateAtlasMarkup then return "" end
     role = tostring(role or "")
-    if role == "DAMAGER" then return CreateAtlasMarkup("roleicon-tiny-dps", size, size) .. " " end
+    if role == "TANK"    then return CreateAtlasMarkup("roleicon-tiny-tank",   size, size) .. " " end
+    if role == "HEALER"  then return CreateAtlasMarkup("roleicon-tiny-healer", size, size) .. " " end
+    if role == "DAMAGER" then return CreateAtlasMarkup("roleicon-tiny-dps",    size, size) .. " " end
     return ""
+end
+
+local function RoleText(role)
+    role = tostring(role or "")
+    if role == "TANK"    then return "Tank"   end
+    if role == "HEALER"  then return "Healer" end
+    if role == "DAMAGER" then return "DPS"    end
+    return "Role?"
 end
 
 local function GetClassColorStr(classFile)
@@ -55,18 +65,81 @@ end
 -- =========================================
 
 local configWin = CreateFrame("Frame", "SSW_ConfigFrame", UIParent, "BasicFrameTemplateWithInset")
-configWin:SetSize(520, 400)
-configWin:SetPoint("CENTER", 0, 100)
+configWin:SetSize(520, 720)
+configWin:SetPoint("CENTER", 0, 60)
+configWin:SetMovable(true)
+configWin:EnableMouse(true)
+configWin:RegisterForDrag("LeftButton")
+configWin:SetScript("OnDragStart", configWin.StartMoving)
+configWin:SetScript("OnDragStop",  configWin.StopMovingOrSizing)
 configWin:Hide()
 
 configWin.title = configWin:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-configWin.title:SetPoint("TOPLEFT", 18, -8)
+configWin.title:SetPoint("TOPLEFT", 14, -10)
 configWin.title:SetText("Solo Shuffle Whisperer - Settings")
 
+-- Section separator helper
+local function AddSectionHeader(parent, text, yOff)
+    local sep = parent:CreateTexture(nil, "ARTWORK")
+    sep:SetHeight(1)
+    sep:SetPoint("TOPLEFT", 14, yOff)
+    sep:SetPoint("TOPRIGHT", -14, yOff)
+    sep:SetColorTexture(0.4, 0.4, 0.4, 0.6)
+
+    local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    lbl:SetPoint("TOPLEFT", 18, yOff - 6)
+    lbl:SetTextColor(1, 0.82, 0)
+    lbl:SetText(text)
+    return yOff - 22
+end
+
+-- ── Section 1: Custom Text Lines ──
+local y = AddSectionHeader(configWin, "CUSTOM MESSAGE LINES  (excluded from Random)", -38)
+
+local custLabel = configWin:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+custLabel:SetPoint("TOPLEFT", 18, y)
+custLabel:SetWidth(480)
+custLabel:SetJustifyH("LEFT")
+custLabel:SetText("Write your own messages below. They appear in the send window message dropdown but are never picked by \"Random\".\nPlaceholders: {name}, {praise}, {role}, {spec}, {btag}")
+
+local CUSTOM_BOX_H = 22
+local CUSTOM_GAP   = 4
+local customBoxes  = {}
+
+for ci = 1, SSW.MAX_CUSTOM_LINES do
+    local boxY = y - 32 - ((ci - 1) * (CUSTOM_BOX_H + CUSTOM_GAP))
+    local numLbl = configWin:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    numLbl:SetPoint("TOPLEFT", 18, boxY - 3)
+    numLbl:SetText(tostring(ci) .. ".")
+
+    local box = CreateFrame("EditBox", "SSW_CustomBox" .. ci, configWin, "InputBoxTemplate")
+    box:SetSize(440, CUSTOM_BOX_H)
+    box:SetPoint("TOPLEFT", 36, boxY)
+    box:SetAutoFocus(false)
+    box:SetMaxLetters(140)
+    box.idx = ci
+    box:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    box:SetScript("OnEditFocusLost", function(self)
+        if not SSW_Config then return end
+        SSW_Config.customLines = SSW_Config.customLines or {}
+        local val = strtrim(self:GetText())
+        SSW_Config.customLines[self.idx] = (val ~= "") and val or nil
+        -- Rebuild row message dropdowns with updated custom lines
+        SSW.UI.RebuildRowMessageDropdowns()
+    end)
+
+    customBoxes[ci] = box
+end
+
+-- ── Section 2: Behavior ──
+local yBehav = y - 32 - (SSW.MAX_CUSTOM_LINES * (CUSTOM_BOX_H + CUSTOM_GAP)) - 10
+yBehav = AddSectionHeader(configWin, "BEHAVIOR", yBehav)
+
 -- Sezione Message 1
-local section1 = CreateFrame("Frame", nil, configWin, "BackdropTemplate")  -- aggiunto "BackdropTemplate"
-section1:SetPoint("TOPLEFT", 12, -45)
-section1:SetPoint("TOPRIGHT", -12, -45)
+local section1 = CreateFrame("Frame", nil, configWin, "BackdropTemplate")
+section1:SetPoint("TOPLEFT", 12, yBehav - 8)
+section1:SetPoint("TOPRIGHT", -12, yBehav - 8)
 section1:SetHeight(85)
 section1:SetBackdrop({
     bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
@@ -88,8 +161,8 @@ hint1:SetText("Default preset (can be changed per-player in send window)")
 
 -- Sezione Message 2
 local section2 = CreateFrame("Frame", nil, configWin, "BackdropTemplate")
-section2:SetPoint("TOPLEFT", 12, -145)
-section2:SetPoint("TOPRIGHT", -12, -145)
+section2:SetPoint("TOPLEFT", 12, yBehav - 108)
+section2:SetPoint("TOPRIGHT", -12, yBehav - 108)
 section2:SetHeight(85)
 section2:SetBackdrop({
     bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
@@ -111,8 +184,8 @@ hint2:SetText("Optional second message with BattleTag info")
 
 -- Sezione Delay
 local section3 = CreateFrame("Frame", nil, configWin, "BackdropTemplate")
-section3:SetPoint("TOPLEFT", 12, -245)
-section3:SetPoint("TOPRIGHT", -12, -245)
+section3:SetPoint("TOPLEFT", 12, yBehav - 208)
+section3:SetPoint("TOPRIGHT", -12, yBehav - 208)
 section3:SetHeight(50)
 section3:SetBackdrop({
     bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
@@ -130,7 +203,7 @@ lblDelay:SetTextColor(1, 0.82, 0, 1)
 
 -- Checkboxes
 local cbAutoGreet = CreateFrame("CheckButton", nil, configWin, "ChatConfigCheckButtonTemplate")
-cbAutoGreet:SetPoint("TOPLEFT", 18, -312)
+cbAutoGreet:SetPoint("TOPLEFT", 18, yBehav - 275)
 cbAutoGreet.Text:ClearAllPoints()
 cbAutoGreet.Text:SetPoint("LEFT", cbAutoGreet, "RIGHT", 6, 1)
 cbAutoGreet.Text:SetWidth(450)
@@ -218,6 +291,18 @@ configWin:SetScript("OnShow", function()
     UIDropDownMenu_SetText(dd2, SSW.MSG2_PRESETS[i2])
 
     delayBox:SetText(tostring(SSW_Config.preSendDelay or SSW.DEFAULT_PRE_SEND_DELAY))
+    
+    -- Populate custom line edit boxes
+    for ci = 1, SSW.MAX_CUSTOM_LINES do
+        local box = customBoxes[ci]
+        if box then
+            local val = (SSW_Config and SSW_Config.customLines and SSW_Config.customLines[ci]) or ""
+            box:SetText(val)
+        end
+    end
+    
+    -- Rebuild row message dropdowns with latest custom lines
+    SSW.UI.RebuildRowMessageDropdowns()
 end)
 
 function SSW.ShowSettings()
@@ -380,11 +465,10 @@ for i = 1, SSW.MAX_ROWS do
     end)
 
     -- Preview (terza riga, più evidente)
-    r.preview = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.preview = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     r.preview:SetPoint("TOPLEFT", 295, -35)
     r.preview:SetWidth(390)
     r.preview:SetJustifyH("LEFT")
-    r.preview:SetTextColor(0.4, 1, 0.4, 1) -- Verde chiaro per preview
 
     function r:SetEnabledSubs(enabled)
         r.cbName:SetEnabled(enabled)
@@ -446,20 +530,30 @@ btnBg:SetBackdrop({
 })
 btnBg:SetBackdropColor(0.05, 0.05, 0.05, 0.6)
 
+local btnAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
+btnAll:SetSize(90, 36)
+btnAll:SetPoint("BOTTOMLEFT", 18, 15)
+btnAll:SetText("All")
+
+local btnNone = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
+btnNone:SetSize(90, 36)
+btnNone:SetPoint("LEFT", btnAll, "RIGHT", 8, 0)
+btnNone:SetText("None")
+
 local btnSend = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnSend:SetSize(160, 36)
-btnSend:SetPoint("BOTTOMLEFT", 18, 15)
+btnSend:SetPoint("LEFT", btnNone, "RIGHT", 8, 0)
 btnSend:SetText("Send Whispers")
 btnSend:SetNormalFontObject("GameFontNormalLarge")
 
 local btnThankAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnThankAll:SetSize(160, 36)
+btnThankAll:SetSize(140, 36)
 btnThankAll:SetPoint("LEFT", btnSend, "RIGHT", 8, 0)
 btnThankAll:SetText("Thank All")
 
 local btnSettings = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnSettings:SetSize(120, 36)
-btnSettings:SetPoint("LEFT", btnThankAll, "RIGHT", 8, 0)
+btnSettings:SetPoint("BOTTOMRIGHT", -128, 15)
 btnSettings:SetText("Settings")
 btnSettings:SetScript("OnClick", function()
     if SSW.ShowSettings then SSW.ShowSettings() end
@@ -479,26 +573,88 @@ end)
 
 function SSW.UI.SetSendUIEnabled(enabled)
     btnSend:SetEnabled(enabled)
+    btnAll:SetEnabled(enabled)
+    btnNone:SetEnabled(enabled)
     btnThankAll:SetEnabled(enabled)
+    btnClose:SetEnabled(enabled)
+    btnSend:SetAlpha(enabled and 1 or 0.35)
+    btnAll:SetAlpha(enabled and 1 or 0.35)
+    btnNone:SetAlpha(enabled and 1 or 0.35)
+    btnThankAll:SetAlpha(enabled and 1 or 0.35)
+    btnClose:SetAlpha(enabled and 1 or 0.35)
+
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r and r:IsShown() then
+            r.cbMain:SetEnabled(enabled)
+            r.cbMain:SetAlpha(enabled and 1 or 0.35)
+            local subsEnabled = enabled and r.cbMain:GetChecked()
+            r.cbName:SetEnabled(subsEnabled)
+            r.cbBnet:SetEnabled(subsEnabled)
+            r.cbName:SetAlpha(subsEnabled and 1 or 0.25)
+            r.cbBnet:SetAlpha(subsEnabled and 1 or 0.25)
+        end
+    end
 end
+
+-- All button handler
+btnAll:SetScript("OnClick", function()
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r:IsShown() then
+            r.cbMain:SetChecked(true)
+            r:SetEnabledSubs(true)
+            if SSW.UI.UpdateRowPreview then SSW.UI.UpdateRowPreview(r) end
+        end
+    end
+end)
+
+-- None button handler
+btnNone:SetScript("OnClick", function()
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r:IsShown() then
+            r.cbMain:SetChecked(false)
+            r:SetEnabledSubs(false)
+            if r.preview then r.preview:SetText("") end
+        end
+    end
+end)
 
 -- Thank all button handler
 btnThankAll:SetScript("OnClick", function()
-    if not IsInGroup() then
-        SSW.Print("Not in a group.")
-        return
+    -- Randomly select one of the MSG1_PRESETS (excluding "Random" and custom messages)
+    -- Build list of preset indices in the combined list
+    local combinedList = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+    local presetIndices = {}
+    
+    -- Only include indices that correspond to non-Random MSG1_PRESETS
+    for idx = 1, #SSW.MSG1_PRESETS do
+        local preset = SSW.MSG1_PRESETS[idx]
+        if type(preset) == "string" and preset ~= "Random" then
+            table.insert(presetIndices, idx)
+        end
     end
     
-    local thanks = {
-        "Thanks for the games everyone!",
-        "GG all, thanks!",
-        "Thanks team, good games!",
-        "Appreciate the games, ty!",
-    }
+    local selectedIdx = 1
+    if #presetIndices > 0 then
+        selectedIdx = presetIndices[math.random(1, #presetIndices)]
+    end
     
-    local msg = thanks[math.random(1, #thanks)]
-    SendChatMessage(msg, "PARTY")
-    SSW.Print("Sent to party: " .. msg)
+    -- Select all visible rows and set their message to the randomly selected preset
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r:IsShown() then
+            r.cbMain:SetChecked(true)
+            r:SetEnabledSubs(true)
+            r.msg1Index = selectedIdx
+            UIDropDownMenu_SetSelectedID(r.dropdown, selectedIdx)
+            if selectedIdx >= 1 and selectedIdx <= #combinedList then
+                UIDropDownMenu_SetText(r.dropdown, combinedList[selectedIdx])
+            end
+            if SSW.UI.UpdateRowPreview then SSW.UI.UpdateRowPreview(r) end
+        end
+    end
 end)
 
 -- =========================================
@@ -538,7 +694,7 @@ function SSW.UI.UpdateRowPreview(r)
     if includeSecond and msg2 ~= "" then line = line .. " | " .. msg2 end
 
     if r.preview then 
-        r.preview:SetText("→ " .. line)
+        r.preview:SetText("Preview: " .. line)
     end
 end
 
@@ -546,6 +702,44 @@ function SSW.UI.UpdateAllPreviews()
     for i = 1, SSW.MAX_ROWS do
         local r = rows[i]
         if r and r:IsShown() then SSW.UI.UpdateRowPreview(r) end
+    end
+end
+
+-- Rebuild row message dropdowns when custom messages change
+function SSW.UI.RebuildRowMessageDropdowns()
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r and r.dropdown then
+            -- Re-initialize dropdown with updated message list
+            UIDropDownMenu_Initialize(r.dropdown, function(self, level)
+                local selectedIdx = r.msg1Index or 1
+                local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+                for idx, txt in ipairs(msg1List) do
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text = txt
+                    info.checked = (idx == selectedIdx)
+                    info.func = function()
+                        r.msg1Index = idx
+                        UIDropDownMenu_SetSelectedID(r.dropdown, idx)
+                        UIDropDownMenu_SetText(r.dropdown, txt)
+                        CloseDropDownMenus()
+                        if SSW.UI.UpdateRowPreview then
+                            SSW.UI.UpdateRowPreview(r)
+                        end
+                    end
+                    UIDropDownMenu_AddButton(info, level)
+                end
+            end)
+            
+            -- Update the dropdown text if it's currently showing
+            if r.dropdown:IsShown() then
+                local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+                local idx = r.msg1Index or 1
+                if idx >= 1 and idx <= #msg1List then
+                    UIDropDownMenu_SetText(r.dropdown, msg1List[idx])
+                end
+            end
+        end
     end
 end
 
@@ -592,7 +786,7 @@ local function PopulateFromSnapshot()
         if icon == "" then icon = ClassIconTag(m.classFile, 16) end
         local colorStr = GetClassColorStr(m.classFile)
 
-        r.text:SetText(roleIcon .. icon .. "|c" .. colorStr .. clean .. "|r |cffaaaaaa(" .. (m.specName or "Spec") .. ")|r")
+        r.text:SetText(roleIcon .. icon .. "|c" .. colorStr .. clean .. "|r |cffaaaaaa(" .. RoleText(m.role or "DAMAGER") .. ")|r")
         r:Show()
         idx = idx + 1
     end
