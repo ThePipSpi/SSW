@@ -134,8 +134,9 @@ The addon integrates with [check-pvp.fr](https://check-pvp.fr) to provide quick 
   - Alt Characters
   - Achievement History
 - **Quick Lookup**: Use this to quickly assess teammate skill levels or find players for future matches
+- **Automatic Region Detection**: The addon automatically detects your region (US, EU, KR, TW, CN) and generates the correct check-pvp.fr URL
 
-**Note**: The check-pvp.fr URL is automatically generated based on the player's name and realm. The feature currently defaults to EU region servers. WoW addons cannot directly open external URLs or fetch external data, so the URL must be copied and pasted into a browser.
+**Note**: The check-pvp.fr URL is automatically generated based on the player's name, realm, and your detected region. WoW addons cannot directly open external URLs or fetch external data, so the URL must be copied and pasted into a browser.
 
 ## How It Works
 
@@ -270,27 +271,22 @@ You can use these placeholders in your custom messages:
 "wp {name}!"                  -- Simple well played
 ```
 
-#### Customize PVP Profile Region
+#### Automatic PVP Profile Region Detection
 
-**Location**: `Core.lua`, in the `SSW.GetCheckPvpUrl` function
+**Location**: `Core.lua`, in the `SSW.GetRegionCode` and `SSW.GetCheckPvpUrl` functions
 
+The addon now automatically detects your region using the WoW API:
+- Uses `GetCurrentRegion()` to detect if you're on US (1), Korea (2), EU (3), Taiwan (4), or China (5) servers
+- Falls back to `GetCVar("portal")` if the primary method fails
+- Defaults to EU if both detection methods fail
+
+**No manual configuration needed!** The addon will automatically use the correct region for check-pvp.fr URLs.
+
+**How it works**:
 ```lua
-return ("https://check-pvp.fr/eu/%s/%s"):format(realm, name)
-```
-
-**How to customize for US region**:
-```lua
--- Change "eu" to "us" for US servers
-return ("https://check-pvp.fr/us/%s/%s"):format(realm, name)
-```
-
-**How to customize for other regions**:
-```lua
--- For Korean servers
-return ("https://check-pvp.fr/kr/%s/%s"):format(realm, name)
-
--- For Taiwan servers  
-return ("https://check-pvp.fr/tw/%s/%s"):format(realm, name)
+-- Auto-detect region (no user modification needed)
+local region = SSW.GetRegionCode()  -- Returns "us", "eu", "kr", "tw", or "cn"
+return ("https://check-pvp.fr/%s/%s/%s"):format(region, realm, name)
 ```
 
 ### ⚙️ Core.lua - Adjust Core Settings
@@ -579,7 +575,7 @@ Overview of all addon files and their purposes:
 
 ### Q: What region does the check-pvp.fr link use?
 
-**A**: Currently, the addon defaults to EU region servers. If you play on US or other regions, you can modify the `SSW.GetCheckPvpUrl` function in `Core.lua` to change the region (replace "eu" with "us" or your region code).
+**A**: The addon automatically detects your region (US, EU, Korea, Taiwan, or China) using the WoW API and generates the correct check-pvp.fr URL. No manual configuration is needed!
 
 ### Q: Can I disable the PvP ranking icons?
 

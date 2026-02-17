@@ -43,6 +43,43 @@ function SSW.GetRealm(fullName)
     return realm or ""
 end
 
+function SSW.GetRegionCode()
+    -- Auto-detect region using GetCurrentRegion() API
+    -- Returns: "us", "eu", "kr", "tw", or "cn"
+    -- GetCurrentRegion() returns: 1=US, 2=Korea, 3=EU, 4=Taiwan, 5=China
+    if GetCurrentRegion then
+        local regionID = GetCurrentRegion()
+        if regionID == 1 then
+            return "us"
+        elseif regionID == 2 then
+            return "kr"
+        elseif regionID == 3 then
+            return "eu"
+        elseif regionID == 4 then
+            return "tw"
+        elseif regionID == 5 then
+            return "cn"
+        end
+    end
+    
+    -- Fallback: try GetCVar("portal") as alternative
+    if GetCVar then
+        local portal = GetCVar("portal")
+        if portal and portal ~= "" then
+            portal = portal:lower()
+            -- Return the portal value if it's valid
+            if portal == "us" or portal == "eu" or portal == "kr" or portal == "tw" or portal == "cn" then
+                return portal
+            end
+        end
+    end
+    
+    -- Default to EU if detection fails (EU servers are used as fallback since
+    -- the addon was originally developed for EU. This default works for most
+    -- cases and users on other regions will have their region auto-detected.)
+    return "eu"
+end
+
 function SSW.GetCheckPvpUrl(fullName)
     if not fullName or fullName == "" then return "" end
     local name = SSW.CleanName(fullName)
@@ -60,8 +97,9 @@ function SSW.GetCheckPvpUrl(fullName)
     realm = realm:lower():gsub("%s+", "-")
     name = name:lower()
     
-    -- Default to EU region. Change "eu" to "us", "kr", "tw", etc. for other regions
-    return ("https://check-pvp.fr/eu/%s/%s"):format(realm, name)
+    -- Auto-detect region (no user modification needed)
+    local region = SSW.GetRegionCode()
+    return ("https://check-pvp.fr/%s/%s/%s"):format(region, realm, name)
 end
 
 function SSW.GetMyBattleTag()
