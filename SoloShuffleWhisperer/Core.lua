@@ -74,7 +74,9 @@ function SSW.GetRegionCode()
         end
     end
     
-    -- Default to EU if detection fails
+    -- Default to EU if detection fails (EU servers are used as fallback since
+    -- the addon was originally developed for EU. This default works for most
+    -- cases and users on other regions will have their region auto-detected.)
     return "eu"
 end
 
