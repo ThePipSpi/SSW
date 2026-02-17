@@ -467,11 +467,10 @@ for i = 1, SSW.MAX_ROWS do
     end)
 
     -- Preview (terza riga, più evidente)
-    r.preview = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.preview = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     r.preview:SetPoint("TOPLEFT", 295, -35)
     r.preview:SetWidth(390)
     r.preview:SetJustifyH("LEFT")
-    r.preview:SetTextColor(0.4, 1, 0.4, 1) -- Verde chiaro per preview
 
     function r:SetEnabledSubs(enabled)
         r.cbName:SetEnabled(enabled)
@@ -625,7 +624,7 @@ function SSW.UI.UpdateRowPreview(r)
     if includeSecond and msg2 ~= "" then line = line .. " | " .. msg2 end
 
     if r.preview then 
-        r.preview:SetText("→ " .. line)
+        r.preview:SetText("Preview: " .. line)
     end
 end
 

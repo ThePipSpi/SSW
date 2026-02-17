@@ -78,10 +78,27 @@ After installation, you should see:
 
 ## Settings
 
+- **Custom Message Lines**: Write up to 10 personalized messages in the settings window. These appear in message dropdowns but are never selected by "Random".
 - **Message 1**: Primary thank-you message (always sent)
 - **Message 2**: Optional Battle.net tag invitation
 - **Delay**: Countdown time before sending in LIVE mode
 - **Auto Greeting**: Automatically greet party members when joining a group
+
+### Custom Messages
+
+The addon now includes a **Custom Message Lines** section in settings where you can write your own personalized messages:
+
+1. Open settings with `/ssw`
+2. Scroll to the "CUSTOM MESSAGE LINES" section at the top
+3. Type your custom messages in any of the 10 available text boxes
+4. Your custom messages will appear in the message dropdown when selecting players
+5. Custom messages support all placeholders: `{name}`, `{praise}`, `{role}`, `{spec}`, `{btag}`
+6. Custom messages are automatically saved and excluded from "Random" selection
+
+**Example custom messages:**
+- `great plays {name}!`
+- `fun shuffle! {name}`
+- `{praise} lets queue again sometime`
 
 ### Message Placeholders
 
