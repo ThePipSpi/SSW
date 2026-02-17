@@ -255,13 +255,13 @@ for i = 1, SSW.MAX_ROWS do
     
     -- Label for GOOD dropdown
     r.goodLabel = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    r.goodLabel:SetPoint("TOPLEFT", 2, -22)
+    r.goodLabel:SetPoint("TOPLEFT", 2, -28)
     r.goodLabel:SetText("|cFF00FF00GOOD Message:|r")
     r.goodLabel:Hide()
     
     r.dropdown = CreateFrame("Frame", "SSW_RowDD_" .. i, r, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(r.dropdown, 140)
-    r.dropdown:SetPoint("TOPLEFT", 0, -30)
+    r.dropdown:SetPoint("TOPLEFT", 0, -36)
     r.dropdown:SetScale(0.9)
     UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
     r.dropdown:Hide()
@@ -323,13 +323,13 @@ for i = 1, SSW.MAX_ROWS do
     
     -- Label for BAD dropdown
     r.badLabel = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    r.badLabel:SetPoint("TOPLEFT", 292, -22)
+    r.badLabel:SetPoint("TOPLEFT", 292, -28)
     r.badLabel:SetText("|cFFFF4444BAD Message:|r")
     r.badLabel:Hide()
     
     r.badDropdown = CreateFrame("Frame", "SSW_RowBadDD_" .. i, r, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(r.badDropdown, 140)
-    r.badDropdown:SetPoint("TOPLEFT", 290, -30)
+    r.badDropdown:SetPoint("TOPLEFT", 290, -36)
     r.badDropdown:SetScale(0.9)
     UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
     r.badDropdown:Hide()
