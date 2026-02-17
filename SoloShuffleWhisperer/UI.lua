@@ -440,6 +440,7 @@ for i = 1, SSW.MAX_ROWS do
     
     r.nameBtn:SetScript("OnClick", function(self)
         if r.pvpUrl and r.pvpUrl ~= "" then
+            -- Store URL in local variable to avoid closure issues
             local urlToCopy = r.pvpUrl
             
             -- Create a copy-paste dialog
