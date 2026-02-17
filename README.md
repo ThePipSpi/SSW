@@ -23,6 +23,9 @@ A World of Warcraft addon for The War Within (11.0+) that helps you send friendl
 - **Smart Roster Tracking**: Tracks all teammates, even those who leave early
 - **Customizable Messages**: Choose from friendly presets or add your own custom lines
 - **PVP-Friendly Messages**: Short, neutral, positive - avoid sarcasm and drama
+- **PVP Profile Integration**: Quick access to player PvP rankings via check-pvp.fr links
+  - Click the PvP icon next to player names to view their check-pvp.fr profile URL
+  - Easily check teammate rankings, best CR, and alt character information
 - **Safety Modes**: 
   - SAFE mode (preview only, no messages sent)
   - LIVE mode (actually sends whispers)
@@ -118,6 +121,21 @@ Following the core principle: **"In PVP less talk is better... but many times yo
 - Avoid role-specific praise that could be misread as sarcasm
 - Keep it simple, positive, and drama-free
 - Use the "Random" option to vary messages naturally
+
+### PVP Profile Integration
+
+The addon integrates with [check-pvp.fr](https://check-pvp.fr) to provide quick access to player PvP rankings:
+
+- **PVP Icon**: Next to each player name, you'll see a clickable PvP icon
+- **Check Rankings**: Click the icon to get a copyable URL to the player's check-pvp.fr profile
+- **Profile Information**: The check-pvp.fr site shows:
+  - Current and best CR (Combat Rating) for the character
+  - Historical season performance
+  - Alt character information and their best ratings
+  - Achievement dates and milestones
+- **Quick Lookup**: Use this to quickly assess teammate skill levels or find players for future matches
+
+**Note**: The check-pvp.fr URL is automatically generated based on the player's name and realm. The feature currently defaults to EU region servers.
 
 ## How It Works
 
@@ -250,6 +268,29 @@ You can use these placeholders in your custom messages:
 ```lua
 "{spec} {name}, gg!"         -- Uses spec and name
 "wp {name}!"                  -- Simple well played
+```
+
+#### Customize PVP Profile Region
+
+**Location**: `Core.lua`, in the `SSW.GetCheckPvpUrl` function
+
+```lua
+return ("https://check-pvp.fr/eu/%s/%s"):format(realm, name)
+```
+
+**How to customize for US region**:
+```lua
+-- Change "eu" to "us" for US servers
+return ("https://check-pvp.fr/us/%s/%s"):format(realm, name)
+```
+
+**How to customize for other regions**:
+```lua
+-- For Korean servers
+return ("https://check-pvp.fr/kr/%s/%s"):format(realm, name)
+
+-- For Taiwan servers  
+return ("https://check-pvp.fr/tw/%s/%s"):format(realm, name)
 ```
 
 ### ⚙️ Core.lua - Adjust Core Settings
@@ -535,6 +576,14 @@ Overview of all addon files and their purposes:
 ### Q: Why are the messages so short?
 
 **A**: Following PVP etiquette: "In PVP less talk is better... but many times you want to praise rather than flame." Short messages are less likely to be misread as sarcastic and keep interactions positive.
+
+### Q: What region does the check-pvp.fr link use?
+
+**A**: Currently, the addon defaults to EU region servers. If you play on US or other regions, you can modify the `SSW.GetCheckPvpUrl` function in `Core.lua` to change the region (replace "eu" with "us" or your region code).
+
+### Q: Can I disable the PvP ranking icons?
+
+**A**: The PvP icons appear automatically next to all player names. If you prefer not to see them, you can comment out or modify the PvP button creation code in `UI.lua`.
 
 ---
 
