@@ -47,10 +47,15 @@ Messages should be:
   - **Send checkbox**: Select to send whisper to this player
   - **Name checkbox**: Include player's name in message using {name} placeholder (for positive messages)
   - **BNet checkbox**: Send second message with BattleTag invitation (for positive messages)
-  - **Blame checkbox**: Send "..." and add player to ignore list (for toxic players - mutually exclusive with Name/BNet)
-  - **Message dropdown**: Select message preset (includes custom messages) - only used for positive messages
+  - **Bad checkbox** (BAD MODE only): Send negative/critical message (unlocked in settings - mutually exclusive with Name/BNet/Blame)
+  - **Blame checkbox**: Send "..." and add player to ignore list (mutually exclusive with Name/BNet/Bad)
+  - **Message dropdown**: Select message preset (includes custom messages) - for positive messages
+  - **BAD dropdown** (BAD MODE only): Select negative message preset - only visible when Bad is checked
   - **Preview area**: Shows what will be sent before sending
-- **Dual Purpose**: Each row can be used EITHER for positive feedback (Name/BNet) OR for quick dismissal (Blame)
+- **Triple Purpose**: Each row can be used for:
+  1. **Good Will** (Name/BNet checked) - positive feedback
+  2. **BAD MODE** (Bad checked) - critical feedback  
+  3. **Blame** (Blame checked) - quick dismissal
 - **Implementation**: `UI.lua`
 
 ### 4. Message System
@@ -78,6 +83,20 @@ Messages should be:
 - "Random" (picks random preset)
 - "if you want to queue more: {btag}"
 ```
+
+#### BAD MODE Presets (Only when enabled)
+```
+- "..."
+- "learn your spec {name}"
+- "you threw {name}"
+- "stop tunneling {name}"
+- "peel next time {name}"
+- "Random"
+- "watch positioning {name}"
+- "check your gear {name}"
+```
+
+**Note**: BAD MODE is disabled by default and must be explicitly enabled in settings with a warning acknowledgment.
 
 #### Placeholders
 - `{name}` - Player name without realm (e.g., "Arthas")
@@ -147,9 +166,22 @@ Messages should be:
 ### 8. Settings Panel
 - **Pre-Send Delay**: Countdown time before sending in LIVE mode (default 3.5s)
 - **Auto Greeting**: Enable/disable automatic party greeting
-- **Custom Message Lines**: 10 text boxes for custom messages
+- **BAD MODE**: Unlock negative/critical message presets (disabled by default with warning)
+- **Custom Message Lines**: 10 text boxes for custom positive messages
 - **Mode Indicator**: Shows current mode (SAFE/LIVE/TEST)
 - **Implementation**: `UI.lua` (settings section)
+
+### 9. BAD MODE Feature (Unlockable)
+- **Purpose**: Send critical feedback to underperforming players
+- **Locked by Default**: Must be explicitly enabled in settings
+- **Warning Dialog**: Shows disclaimer about potential reports/consequences
+- **Dedicated Checkbox**: "Bad" column appears when enabled
+- **Separate Dropdown**: BAD MODE messages in dedicated dropdown
+- **Mutual Exclusivity**: Bad checkbox unchecks Name, BNet, and Blame
+- **Preview**: Shows |cFFFF4444[BAD]|r prefix for negative messages
+- **Message Limit**: Still respects 140 character limit
+- **Anti-Spam**: Same cooldowns apply as positive messages
+- **Implementation**: `Presets.lua`, `UI.lua`, `Send.lua`
 
 ### 9. PvP Profile Integration
 - **Provider**: check-pvp.fr
@@ -295,7 +327,7 @@ Messages should be:
 7. Window opens in center of screen
 
 ### Sending Whispers
-1. User selects players and options (either Good Will or Blame per player)
+1. User selects players and options (Good Will, BAD MODE, or Blame per player)
 2. User clicks "Send Whispers" button
 3. `Send.lua` checks anti-spam (`CanStartBurst()`)
 4. For each selected row:
@@ -303,6 +335,9 @@ Messages should be:
    - If Blame checkbox is checked:
      - Queue "..." message
      - Mark for ignore list addition
+   - Else if Bad checkbox is checked (BAD MODE):
+     - Build message with `BuildBadMessage()`
+     - Queue negative message
    - Else (Good Will mode):
      - Build messages with `BuildMessagesForTarget()`
      - Queue message 1 and optionally message 2
@@ -327,15 +362,16 @@ Messages should be:
 4. Clean up artifacts (extra spaces, dashes, punctuation)
 5. Trim to MAX_LEN (140 chars)
 
-### Checkbox Logic (Dual Purpose Design)
-The checkboxes enforce mutual exclusivity between GOOD WILL mode and BLAME mode:
+### Checkbox Logic (Triple Purpose Design)
+The checkboxes enforce mutual exclusivity between GOOD WILL mode, BAD MODE, and BLAME mode:
 
 - **Send checkbox**: Master control, enables other checkboxes
-- **Name checkbox** (Good Will): When checked, unchecks Blame (can't praise and blame simultaneously)
-- **BNet checkbox** (Good Will): When checked, unchecks Blame (can't invite and ignore simultaneously)
-- **Blame checkbox** (Blame Mode): When checked, unchecks Name and BNet (blame mode is mutually exclusive with good will)
+- **Name checkbox** (Good Will): When checked, unchecks Bad and Blame
+- **BNet checkbox** (Good Will): When checked, unchecks Bad and Blame
+- **Bad checkbox** (BAD MODE): When checked, unchecks Name, BNet, and Blame - shows BAD dropdown
+- **Blame checkbox** (Blame Mode): When checked, unchecks Name, BNet, and Bad
 
-**Design Philosophy**: You either thank someone OR dismiss them, never both. This prevents mixed messages and maintains clarity.
+**Design Philosophy**: You either thank someone OR criticize them OR dismiss them, never multiple modes simultaneously. This prevents mixed messages and maintains clarity.
 
 ## Error Handling
 
