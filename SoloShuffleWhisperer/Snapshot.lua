@@ -15,7 +15,7 @@ local function GetSpecInfo(specName)
     if not specName or specName == "" then return nil, "DAMAGER" end
     if not GetSpecializationInfoByID then return nil, "DAMAGER" end
     for id = 1, 500 do
-        local ok, name, _, _, _, role = pcall(GetSpecializationInfoByID, id)
+        local ok, specID, name, _, _, role = pcall(GetSpecializationInfoByID, id)
         if ok and name and name:lower() == specName:lower() then
             return id, (role or "DAMAGER")
         end
