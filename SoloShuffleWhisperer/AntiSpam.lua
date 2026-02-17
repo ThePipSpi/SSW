@@ -46,6 +46,7 @@ function SSW.AntiSpam.CanStartBurst()
     local st = EnsureState()
 
     local now = SSW.Now()
+    if not now then return false, "Time error" end
     if (now - (st.lastBurstAt or 0)) < (cfg.minSecondsBetweenBursts or 0) then
         return false, "Too soon (burst throttle)."
     end
@@ -66,6 +67,7 @@ function SSW.AntiSpam.CanWhisperTarget(targetFullName)
     local st = EnsureState()
 
     local now = SSW.Now()
+    if not now then return false, "Time error" end
 
     -- per-target cooldown
     local last = st.lastWhisperAt[targetFullName]

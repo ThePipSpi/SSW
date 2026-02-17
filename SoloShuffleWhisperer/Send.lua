@@ -199,8 +199,6 @@ local function ProcessWhispers(isTest)
             -- Schedule next
             if idx < #queue then
                 C_Timer.After(SSW.SEND_DELAY, SendNext)
-            else
-                SSW.Print("Done sending whispers.")
             end
         end
 

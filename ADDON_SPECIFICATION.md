@@ -1,14 +1,22 @@
 # Solo Shuffle Whisperer - Addon Specification
 
 ## Purpose
-A World of Warcraft addon for The War Within (11.0+) that helps players send friendly, positive thank-you messages to teammates after Solo Shuffle PvP matches.
+A World of Warcraft addon for The War Within (11.0+) that serves dual purposes:
+
+1. **Good Will Mode**: Send friendly, positive thank-you messages to teammates after Solo Shuffle PvP matches
+2. **Blame Mode**: Quickly dismiss toxic players by sending "..." and adding them to your ignore list
 
 ## Core Philosophy
 **"In PVP, less talk is better... but many times you want to praise rather than flame."**
 
+The addon helps you:
+- **Praise good teammates** with short, neutral, positive messages
+- **Dismiss toxic players** quickly without engaging in drama
+- **Maintain PvP etiquette** by keeping interactions brief and clear
+
 Messages should be:
 - Short and neutral
-- Positive and friendly
+- Either positive (for good will) or minimal (for blame)
 - Non-sarcastic
 - Drama-free
 
@@ -37,11 +45,12 @@ Messages should be:
 - **Max Rows**: 5 (one for each teammate)
 - **Per-Row Controls**:
   - **Send checkbox**: Select to send whisper to this player
-  - **Name checkbox**: Include player's name in message using {name} placeholder
-  - **BNet checkbox**: Send second message with BattleTag invitation
-  - **Blame checkbox**: Send "..." and add player to ignore list (mutually exclusive with Name/BNet)
-  - **Message dropdown**: Select message preset (includes custom messages)
+  - **Name checkbox**: Include player's name in message using {name} placeholder (for positive messages)
+  - **BNet checkbox**: Send second message with BattleTag invitation (for positive messages)
+  - **Blame checkbox**: Send "..." and add player to ignore list (for toxic players - mutually exclusive with Name/BNet)
+  - **Message dropdown**: Select message preset (includes custom messages) - only used for positive messages
   - **Preview area**: Shows what will be sent before sending
+- **Dual Purpose**: Each row can be used EITHER for positive feedback (Name/BNet) OR for quick dismissal (Blame)
 - **Implementation**: `UI.lua`
 
 ### 4. Message System
@@ -110,11 +119,13 @@ Messages should be:
 #### Bottom Bar Buttons (Left to Right)
 - **All** (90px): Check all Send checkboxes
 - **None** (90px): Uncheck all Send checkboxes
-- **Send Whispers** (160px): Process selected whispers according to current mode
-- **Ty All** (100px): Immediately send random message to all players and add to ignore
-- **Blame All** (100px): Immediately send "..." to all players and add to ignore
+- **Send Whispers** (160px): Process selected whispers according to current mode (respects Blame checkbox)
+- **Ty All** (100px): **GOOD WILL** - Immediately send random positive message to all players and add to ignore (quick thank you + avoid future matches)
+- **Blame All** (100px): **BLAME MODE** - Immediately send "..." to all players and add to ignore (quick dismissal of toxic team)
 - **Settings** (120px): Open settings panel
 - **Close** (100px): Close whisper window
+
+**Note**: "Ty All" and "Blame All" both add players to ignore list - the difference is the message sent. "Ty All" is for when you had a good game but don't want to queue with them again. "Blame All" is for toxic teams you want to completely avoid.
 
 #### Special Buttons
 - **PvP Icon Button**: Opens check-pvp.fr URL for player rankings
@@ -284,19 +295,24 @@ Messages should be:
 7. Window opens in center of screen
 
 ### Sending Whispers
-1. User selects players and options
+1. User selects players and options (either Good Will or Blame per player)
 2. User clicks "Send Whispers" button
 3. `Send.lua` checks anti-spam (`CanStartBurst()`)
 4. For each selected row:
    - Check `CanWhisperTarget()`
-   - Build messages with `BuildMessagesForTarget()`
+   - If Blame checkbox is checked:
+     - Queue "..." message
+     - Mark for ignore list addition
+   - Else (Good Will mode):
+     - Build messages with `BuildMessagesForTarget()`
+     - Queue message 1 and optionally message 2
    - Add to queue
 5. If LIVE mode:
    - Show countdown (default 3.5s)
    - After countdown, send whispers sequentially
    - 0.35s delay between each
    - Mark each target in anti-spam
-   - Add to ignore if Blame checked
+   - Add to ignore if Blame was checked
 6. Window closes after sending
 
 ### Message Building
@@ -311,11 +327,15 @@ Messages should be:
 4. Clean up artifacts (extra spaces, dashes, punctuation)
 5. Trim to MAX_LEN (140 chars)
 
-### Checkbox Logic
+### Checkbox Logic (Dual Purpose Design)
+The checkboxes enforce mutual exclusivity between GOOD WILL mode and BLAME mode:
+
 - **Send checkbox**: Master control, enables other checkboxes
-- **Name checkbox**: When checked, unchecks Blame
-- **BNet checkbox**: When checked, unchecks Blame  
-- **Blame checkbox**: When checked, unchecks Name and BNet (mutually exclusive)
+- **Name checkbox** (Good Will): When checked, unchecks Blame (can't praise and blame simultaneously)
+- **BNet checkbox** (Good Will): When checked, unchecks Blame (can't invite and ignore simultaneously)
+- **Blame checkbox** (Blame Mode): When checked, unchecks Name and BNet (blame mode is mutually exclusive with good will)
+
+**Design Philosophy**: You either thank someone OR dismiss them, never both. This prevents mixed messages and maintains clarity.
 
 ## Error Handling
 
@@ -341,11 +361,14 @@ Messages should be:
 ## Best Practices for AI Development
 
 ### When Adding Features
-1. Maintain the "less talk is better" philosophy
+1. Maintain the "less talk is better" philosophy for BOTH modes:
+   - Good Will: Short, positive, non-sarcastic
+   - Blame: Minimal ("...") to avoid escalating drama
 2. Keep messages short (< 140 chars)
 3. Always use anti-spam protection
 4. Test in SAFE mode first
 5. Respect user privacy (no data collection)
+6. Maintain mutual exclusivity between Good Will and Blame modes
 
 ### Code Style
 - Use SSW namespace for all globals
@@ -381,32 +404,51 @@ Messages should be:
 ## Future Enhancement Ideas
 
 1. **Multi-Language Support**: Templates in other languages
-2. **Statistics Dashboard**: Track messages sent, players thanked
+2. **Statistics Dashboard**: Track messages sent, players thanked vs players blamed
 3. **Friend Recommendations**: Suggest adding frequently matched good players
-4. **Template Variables**: More placeholders (class, rating, performance)
-5. **Macro Integration**: Create macros for common actions
-6. **Guild Sync**: Share custom messages with guildmates
-7. **Rating Threshold**: Only whisper players above certain CR
-8. **Win/Loss Context**: Different messages for wins vs losses
+4. **Smart Blame Detection**: Automatically suggest blame for players who flame in chat
+5. **Template Variables**: More placeholders (class, rating, performance)
+6. **Macro Integration**: Create macros for common actions
+7. **Guild Sync**: Share custom messages with guildmates
+8. **Rating Threshold**: Only whisper players above certain CR
+9. **Win/Loss Context**: Different messages for wins vs losses
+10. **Separate Good/Bad Lists**: Maintain lists of consistently good and toxic players
 
 ## Testing Checklist
 
+### Core Functionality
 - [ ] Test mode opens with dummy data
 - [ ] Safe mode shows previews without sending
 - [ ] Live mode sends actual whispers
-- [ ] Checkboxes enable/disable correctly
-- [ ] Blame checkbox is mutually exclusive
-- [ ] All/None buttons work
-- [ ] Ty All sends random messages
-- [ ] Blame All sends "..." and ignores
+
+### Good Will Mode
+- [ ] Name/BNet checkboxes work for positive messages
+- [ ] Ty All sends random positive messages to all
+- [ ] Placeholders replaced correctly in messages
 - [ ] Custom messages appear in dropdown
 - [ ] Custom messages excluded from Random
-- [ ] Placeholders replaced correctly
-- [ ] Anti-spam prevents duplicates
+- [ ] BattleTag invitation sends as second message
+
+### Blame Mode
+- [ ] Blame checkbox is mutually exclusive with Name/BNet
+- [ ] Blame All sends "..." to all players
+- [ ] Players are added to ignore list when blamed
+- [ ] Blame preview shows "... (will be ignored)"
+- [ ] Blame works in both individual and batch mode
+
+### UI and Controls
+- [ ] Checkboxes enable/disable correctly
+- [ ] All/None buttons work
 - [ ] Minimap button toggles mode
-- [ ] Settings persist across sessions
 - [ ] Window position saves
+- [ ] Settings persist across sessions
+
+### Anti-Spam and Safety
+- [ ] Anti-spam prevents duplicates
 - [ ] Messages truncated at 140 chars
+- [ ] Cooldowns prevent spam
+
+### Integration
 - [ ] Check-pvp.fr URLs generate correctly
 - [ ] Region auto-detection works
 - [ ] Auto-greeting fires on group join

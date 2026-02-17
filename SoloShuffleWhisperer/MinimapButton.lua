@@ -89,7 +89,7 @@ local function CreateButton()
             if SSW.ToggleArmed then
                 SSW.ToggleArmed()
             elseif SSW_CharConfig then
-                SSW_CharConfig.isArmed = not not (not SSW_CharConfig.isArmed)
+                SSW_CharConfig.isArmed = not SSW_CharConfig.isArmed
             end
             UpdateIconVisual(self)
             if SSW.Print then

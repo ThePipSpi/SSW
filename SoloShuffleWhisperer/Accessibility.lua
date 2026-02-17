@@ -15,7 +15,7 @@ function SSW.Access.ApplyToFrame(frame, label)
     frame.accessibleLabel = label or "Frame"
     
     -- Add tooltip hint for accessibility
-    if frame.SetScript then
+    if frame.SetScript and frame.GetScript then
         local oldOnEnter = frame:GetScript("OnEnter")
         frame:SetScript("OnEnter", function(self)
             if oldOnEnter then oldOnEnter(self) end
