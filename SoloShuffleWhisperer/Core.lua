@@ -10,6 +10,7 @@ SSW.SEND_DELAY = 0.35
 SSW.DEFAULT_PRE_SEND_DELAY = 3.5
 SSW.MAX_LEN = 140
 SSW.MAX_CUSTOM_LINES = 10
+SSW.MAX_CUSTOM_BAD_LINES = 10
 
 SSW.IsTesting = false
 
@@ -171,6 +172,7 @@ core:SetScript("OnEvent", function(self, event, arg1)
             autoPartyThanksOnReward = false,
             autoGreetEnabled = false,
             customLines = {},
+            customBadLines = {},
             badModeEnabled = false,  -- BAD MODE locked by default
         }
     end
@@ -183,6 +185,9 @@ core:SetScript("OnEvent", function(self, event, arg1)
     end
     if not SSW_Config.customLines then
         SSW_Config.customLines = {}
+    end
+    if not SSW_Config.customBadLines then
+        SSW_Config.customBadLines = {}
     end
     if SSW_Config.badModeEnabled == nil then
         SSW_Config.badModeEnabled = false

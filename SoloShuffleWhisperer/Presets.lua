@@ -69,12 +69,29 @@ function SSW.GetMsg1WithCustom()
     return list
 end
 
--- Get BAD MODE presets (only when enabled)
-function SSW.GetBadModePresets()
+-- Get BAD MODE presets with custom lines
+function SSW.GetBadModePresetsWithCustom()
     if not SSW_Config or not SSW_Config.badModeEnabled then
         return {}
     end
-    return SSW.BAD_MODE_PRESETS
+    
+    local list = {}
+    -- Add predefined presets
+    for _, v in ipairs(SSW.BAD_MODE_PRESETS) do
+        table.insert(list, v)
+    end
+    
+    -- Add custom BAD lines
+    if SSW_Config.customBadLines then
+        for i = 1, SSW.MAX_CUSTOM_BAD_LINES do
+            local line = SSW_Config.customBadLines[i]
+            if line and strtrim(line) ~= "" then
+                table.insert(list, CUSTOM_TAG .. line)
+            end
+        end
+    end
+    
+    return list
 end
 
 -- Check if BAD MODE is enabled
@@ -295,8 +312,8 @@ function SSW.BuildBadMessage(targetFullName, badMsgIndex, meta)
     local roleTxt = RoleText(role)
     local specName = SpecNameFromID(tonumber(meta.specID) or 0)
     
-    -- Get BAD MODE presets
-    local badList = SSW.GetBadModePresets()
+    -- Get BAD MODE presets with custom lines
+    local badList = SSW.GetBadModePresetsWithCustom()
     if #badList == 0 then
         return "..."  -- Fallback
     end
@@ -307,11 +324,18 @@ function SSW.BuildBadMessage(targetFullName, badMsgIndex, meta)
     
     local badTemplate = badList[badIdx]
     
-    -- Handle "Random" selection
+    -- Strip custom tag if present
+    if type(badTemplate) == "string" and badTemplate:sub(1, #CUSTOM_TAG) == CUSTOM_TAG then
+        badTemplate = badTemplate:sub(#CUSTOM_TAG + 1)
+    end
+    
+    -- Handle "Random" selection (exclude custom messages from random)
     if type(badTemplate) == "string" and badTemplate:lower():find("random", 1, true) then
         local candidates = {}
         for _, v in ipairs(badList) do
-            if type(v) == "string" and not v:lower():find("random", 1, true) then
+            if type(v) == "string" 
+               and not v:lower():find("random", 1, true)
+               and v:sub(1, #CUSTOM_TAG) ~= CUSTOM_TAG then
                 table.insert(candidates, v)
             end
         end

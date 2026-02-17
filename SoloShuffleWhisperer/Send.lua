@@ -113,12 +113,27 @@ local function ProcessWhispers(isTest)
                         }
                         local badMsg = SSW.BuildBadMessage(r.playerName, r.badMsgIndex or 1, meta)
                         
+                        -- Check if should ignore after sending BAD message
+                        local shouldIgnore = r.cbIgnoreOnBad and r.cbIgnoreOnBad:GetChecked()
+                        
                         if isTest then
-                            PreviewLine(classColor, "[TEST -> " .. clean .. " - BAD]", badMsg)
+                            if shouldIgnore then
+                                PreviewLine(classColor, "[TEST -> " .. clean .. " - BAD]", badMsg .. " (will be ignored)")
+                            else
+                                PreviewLine(classColor, "[TEST -> " .. clean .. " - BAD]", badMsg)
+                            end
                         elseif SSW.IsArmed() then
-                            Enqueue(target, badMsg)
+                            if shouldIgnore then
+                                table.insert(queue, { target = target, text = badMsg, addToIgnore = true })
+                            else
+                                Enqueue(target, badMsg)
+                            end
                         else
-                            PreviewLine(classColor, "[SAFE -> " .. clean .. " - BAD]", badMsg)
+                            if shouldIgnore then
+                                PreviewLine(classColor, "[SAFE -> " .. clean .. " - BAD]", badMsg .. " (will be ignored)")
+                            else
+                                PreviewLine(classColor, "[SAFE -> " .. clean .. " - BAD]", badMsg)
+                            end
                         end
                     else
                         -- Normal mode
