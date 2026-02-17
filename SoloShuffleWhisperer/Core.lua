@@ -211,7 +211,7 @@ core:SetScript("OnEvent", function(self, event, arg1)
     end
 
     SSW.Print("Loaded. Mode: " .. (SSW.IsArmed() and "|cffff2020LIVE|r" or "|cff00ffffSAFE|r"))
-    SSW.Print("Commands: /ssw (settings)  /ssw show  /ssw test  /ssw arm")
+    SSW.Print("Commands: /ssw (settings)  /ssw show  /ssw test  /ssw arm  /ssw pvp (test check-pvp.fr)")
 end)
 
 -- =========================================
@@ -236,6 +236,45 @@ SlashCmdList["SSW"] = function(msg)
 
     if cmd == "arm" then
         SSW.ToggleArmed()
+        return
+    end
+    
+    if cmd == "checkpvp" or cmd == "pvp" then
+        -- Test check-pvp.fr URL generation with player's own character
+        local playerName = UnitName("player") or "Unknown"
+        local realmName = GetRealmName() or "Unknown"
+        local fullName = playerName .. "-" .. realmName
+        local url = SSW.GetCheckPvpUrl(fullName)
+        local region = SSW.GetRegionCode()
+        
+        SSW.Print("|cff00ff00=== Check-PvP.fr Test ===|r")
+        SSW.Print("Character: |cffffffff" .. playerName .. "|r")
+        SSW.Print("Realm: |cffffffff" .. realmName .. "|r")
+        SSW.Print("Region: |cffffffff" .. region:upper() .. "|r")
+        SSW.Print("URL: |cff00ffff" .. url .. "|r")
+        SSW.Print("|cffff8800Use /ssw show to test tooltips in whisper window|r")
+        
+        -- Show popup with copyable URL
+        if not StaticPopupDialogs["SSW_TEST_CHECKPVP"] then
+            StaticPopupDialogs["SSW_TEST_CHECKPVP"] = {
+                text = "Your Check-PvP.fr URL:\n(Copy with Ctrl+C)",
+                button1 = "Close",
+                timeout = 0,
+                whileDead = true,
+                hideOnEscape = true,
+                hasEditBox = true,
+                OnShow = function(self, data)
+                    C_Timer.After(0.05, function()
+                        if self.editBox then
+                            self.editBox:SetText(data or "")
+                            self.editBox:HighlightText()
+                            self.editBox:SetFocus()
+                        end
+                    end)
+                end,
+            }
+        end
+        StaticPopup_Show("SSW_TEST_CHECKPVP", "", "", url)
         return
     end
 
