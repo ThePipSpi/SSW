@@ -126,7 +126,7 @@ for ci = 1, SSW.MAX_CUSTOM_LINES do
         local val = strtrim(self:GetText())
         SSW_Config.customLines[self.idx] = (val ~= "") and val or nil
         -- Rebuild row message dropdowns with updated custom lines
-        if SSW.UI.RebuildRowMessageDropdowns then SSW.UI.RebuildRowMessageDropdowns() end
+        SSW.UI.RebuildRowMessageDropdowns()
     end)
 
     customBoxes[ci] = box
@@ -302,9 +302,7 @@ configWin:SetScript("OnShow", function()
     end
     
     -- Rebuild row message dropdowns with latest custom lines
-    if SSW.UI.RebuildRowMessageDropdowns then
-        SSW.UI.RebuildRowMessageDropdowns()
-    end
+    SSW.UI.RebuildRowMessageDropdowns()
 end)
 
 function SSW.ShowSettings()
