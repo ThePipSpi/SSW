@@ -46,7 +46,7 @@ local function AddSectionHeader(parent, text, yOff)
     lbl:SetPoint("TOPLEFT", 18, yOff - 6)
     lbl:SetTextColor(1, 0.82, 0)
     lbl:SetText(text)
-    return yOff - 22
+    return yOff - 22, sep, lbl
 end
 
 -- ── Section 1: Custom Text Lines ──
@@ -138,7 +138,8 @@ badModeWarning:SetTextColor(1, 0.5, 0, 1)
 
 -- ── Section: Custom BAD Lines (only visible when BAD MODE enabled) ──
 local yBadCustom = yBadMode - 50  -- Position below BAD MODE warning
-yBadCustom = AddSectionHeader(scrollChild, "CUSTOM BAD MESSAGE LINES  (excluded from Random)", yBadCustom)
+local badSectionSep, badSectionLabel
+yBadCustom, badSectionSep, badSectionLabel = AddSectionHeader(scrollChild, "CUSTOM BAD MESSAGE LINES  (excluded from Random)", yBadCustom)
 
 local badCustLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 badCustLabel:SetPoint("TOPLEFT", 18, yBadCustom)
@@ -181,16 +182,25 @@ for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
     box:Hide()
 end
 
+-- Hide section header by default
+badSectionSep:Hide()
+badSectionLabel:Hide()
+badCustLabel:Hide()
+
 -- Store references for showing/hiding
 scrollChild.customBadBoxes = customBadBoxes
 scrollChild.customBadNumLabels = customBadNumLabels
 scrollChild.badCustLabel = badCustLabel
+scrollChild.badSectionSep = badSectionSep
+scrollChild.badSectionLabel = badSectionLabel
 scrollChild.yBadCustomAfter = yBadCustom - 32 - (SSW.MAX_CUSTOM_BAD_LINES * (CUSTOM_BOX_H + CUSTOM_GAP))
 
 -- Helper function to show/hide custom BAD boxes
 UpdateBadCustomBoxesVisibility = function()
     local enabled = SSW_Config and SSW_Config.badModeEnabled
     badCustLabel:SetShown(enabled)
+    badSectionSep:SetShown(enabled)
+    badSectionLabel:SetShown(enabled)
     for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
         local box = customBadBoxes[ci]
         local numLbl = customBadNumLabels[ci]
