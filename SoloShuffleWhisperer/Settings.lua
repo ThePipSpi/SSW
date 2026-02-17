@@ -182,7 +182,8 @@ for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
     box:Hide()
 end
 
--- Hide section header by default
+-- Hide section header and label by default (only shown when settings window opens with BAD MODE enabled)
+-- The edit boxes and their number labels are already hidden in the loop above (lines 180-181)
 badSectionSep:Hide()
 badSectionLabel:Hide()
 badCustLabel:Hide()
