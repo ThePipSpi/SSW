@@ -540,24 +540,24 @@ for i = 1, SSW.MAX_ROWS do
     -- Checkbox "Send" (allineata)
     r.cbMain = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbMain:SetSize(26, 26)
-    r.cbMain:SetPoint("TOPLEFT", 268, -6)
+    r.cbMain:SetPoint("TOPLEFT", 280, -6)
 
     -- Checkbox "Use {name}"
     r.cbName = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbName:SetSize(26, 26)
-    r.cbName:SetPoint("TOPLEFT", 328, -6)
+    r.cbName:SetPoint("TOPLEFT", 340, -6)
     r.cbName:SetEnabled(false)
 
     -- Checkbox "+ BNet"
     r.cbBnet = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBnet:SetSize(26, 26)
-    r.cbBnet:SetPoint("TOPLEFT", 388, -6)
+    r.cbBnet:SetPoint("TOPLEFT", 400, -6)
     r.cbBnet:SetEnabled(false)
 
     -- Checkbox "Blame"
     r.cbBlame = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBlame:SetSize(26, 26)
-    r.cbBlame:SetPoint("TOPLEFT", 448, -6)
+    r.cbBlame:SetPoint("TOPLEFT", 460, -6)
     r.cbBlame:SetEnabled(false)
 
     -- Dropdown per msg1 (seconda riga, più grande)
@@ -704,7 +704,7 @@ btnBlameAll:SetText("Blame All")
 
 local btnSettings = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnSettings:SetSize(120, 36)
-btnSettings:SetPoint("BOTTOMRIGHT", -128, 15)
+btnSettings:SetPoint("BOTTOMRIGHT", -238, 15)
 btnSettings:SetText("Settings")
 btnSettings:SetScript("OnClick", function()
     if SSW.ShowSettings then SSW.ShowSettings() end
