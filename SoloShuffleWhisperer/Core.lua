@@ -171,6 +171,7 @@ core:SetScript("OnEvent", function(self, event, arg1)
             autoPartyThanksOnReward = false,
             autoGreetEnabled = false,
             customLines = {},
+            badModeEnabled = false,  -- BAD MODE locked by default
         }
     end
     -- Migrations: fill in keys missing from older saved configs
@@ -182,6 +183,9 @@ core:SetScript("OnEvent", function(self, event, arg1)
     end
     if not SSW_Config.customLines then
         SSW_Config.customLines = {}
+    end
+    if SSW_Config.badModeEnabled == nil then
+        SSW_Config.badModeEnabled = false
     end
 
     -- Per-character config (LIVE default ON)

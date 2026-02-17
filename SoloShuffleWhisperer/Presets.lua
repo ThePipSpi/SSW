@@ -31,6 +31,20 @@ SSW.MSG2_PRESETS = {
     "if you want to queue more: {btag}",
 }
 
+-- BAD MODE presets (only available when enabled in settings)
+-- These are intentionally short and not overly toxic - just critical feedback
+-- Philosophy: "Less talk is better" applies even to negative feedback
+SSW.BAD_MODE_PRESETS = {
+    "...",
+    "learn your spec {name}",
+    "you threw {name}",
+    "stop tunneling {name}",
+    "peel next time {name}",
+    "Random",
+    "watch positioning {name}",
+    "check your gear {name}",
+}
+
 -- Custom lines are appended at runtime but excluded from Random selection
 -- They are stored in SSW_Config.customLines = { [1] = "...", ... }
 
@@ -53,6 +67,19 @@ function SSW.GetMsg1WithCustom()
         end
     end
     return list
+end
+
+-- Get BAD MODE presets (only when enabled)
+function SSW.GetBadModePresets()
+    if not SSW_Config or not SSW_Config.badModeEnabled then
+        return {}
+    end
+    return SSW.BAD_MODE_PRESETS
+end
+
+-- Check if BAD MODE is enabled
+function SSW.IsBadModeEnabled()
+    return SSW_Config and SSW_Config.badModeEnabled or false
 end
 
 -- =========================================
@@ -249,4 +276,61 @@ function SSW.BuildMessagesForTarget(targetFullName, includeName, includeSecond, 
     end
 
     return msg1, msg2
+end
+
+-- Build BAD MODE message (negative/critical feedback)
+function SSW.BuildBadMessage(targetFullName, badMsgIndex, meta)
+    if not SSW.IsBadModeEnabled() then
+        return "..."  -- Fallback if BAD MODE somehow called when disabled
+    end
+    
+    meta = meta or {}
+    
+    local clean = SSW.CleanName(targetFullName)
+    local role = meta.role
+    if role == "NONE" or role == "" or role == nil then
+        role = InferRoleFromSpecID(tonumber(meta.specID) or 0) or role
+    end
+    
+    local roleTxt = RoleText(role)
+    local specName = SpecNameFromID(tonumber(meta.specID) or 0)
+    
+    -- Get BAD MODE presets
+    local badList = SSW.GetBadModePresets()
+    if #badList == 0 then
+        return "..."  -- Fallback
+    end
+    
+    -- Get template (handle Random selection)
+    local badIdx = tonumber(badMsgIndex) or 1
+    if badIdx < 1 or badIdx > #badList then badIdx = 1 end
+    
+    local badTemplate = badList[badIdx]
+    
+    -- Handle "Random" selection
+    if type(badTemplate) == "string" and badTemplate:lower():find("random", 1, true) then
+        local candidates = {}
+        for _, v in ipairs(badList) do
+            if type(v) == "string" and not v:lower():find("random", 1, true) then
+                table.insert(candidates, v)
+            end
+        end
+        if #candidates > 0 then
+            local r = (type(math.random) == "function") and math.random(1, #candidates) or 1
+            badTemplate = candidates[r]
+        else
+            badTemplate = "..."
+        end
+    end
+    
+    -- Apply placeholders
+    local badMsg = SSW.CleanOutgoing(
+        badTemplate
+            :gsub("{name}", clean)
+            :gsub("{role}", roleTxt)
+            :gsub("{spec}", specName)
+    )
+    badMsg = CleanupArtifacts(badMsg)
+    
+    return badMsg
 end

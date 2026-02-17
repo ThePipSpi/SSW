@@ -81,6 +81,9 @@ local function ProcessWhispers(isTest)
 
                 -- Check if Blame checkbox is checked
                 local isBlame = r.cbBlame:GetChecked()
+                
+                -- Check if BAD MODE checkbox is checked
+                local isBadMode = r.cbBad and r.cbBad:GetChecked()
 
                 -- Check anti-spam for this target
                 local canSend = true
@@ -101,6 +104,21 @@ local function ProcessWhispers(isTest)
                             table.insert(queue, { target = target, text = "...", addToIgnore = true })
                         else
                             PreviewLine(classColor, "[SAFE -> " .. clean .. " - BLAME]", "... (will be ignored)")
+                        end
+                    elseif isBadMode and SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
+                        -- BAD MODE: send negative message
+                        local meta = {
+                            role = r.role or "NONE",
+                            specID = r.specID or 0,
+                        }
+                        local badMsg = SSW.BuildBadMessage(r.playerName, r.badMsgIndex or 1, meta)
+                        
+                        if isTest then
+                            PreviewLine(classColor, "[TEST -> " .. clean .. " - BAD]", badMsg)
+                        elseif SSW.IsArmed() then
+                            Enqueue(target, badMsg)
+                        else
+                            PreviewLine(classColor, "[SAFE -> " .. clean .. " - BAD]", badMsg)
                         end
                     else
                         -- Normal mode
