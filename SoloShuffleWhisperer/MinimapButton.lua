@@ -12,7 +12,7 @@ local BTN_NAME = "SSW_MinimapButton"
 -- Saved per character (optional position)
 local function GetCharCfg()
     SSW_CharConfig = SSW_CharConfig or {}
-    SSW_CharConfig.minimap = SSW_CharConfig.minimap or { angle = 220 }
+    SSW_CharConfig.minimap = SSW_CharConfig.minimap or { x = -200, y = 100 }
     return SSW_CharConfig
 end
 
@@ -27,17 +27,13 @@ local function UpdateIconVisual(btn)
     end
 end
 
-local function SetAngle(btn, angle)
+local function SetPosition(btn, x, y)
     local cfg = GetCharCfg()
-    cfg.minimap.angle = angle
-
-    local rad = math.rad(angle)
-    local x = math.cos(rad) * 80  -- Reduced from 90 to better center on minimap border
-    local y = math.sin(rad) * 80
-
-    -- IMPORTANT: prevent anchor-family errors
+    cfg.minimap.x = x or cfg.minimap.x or -200
+    cfg.minimap.y = y or cfg.minimap.y or 100
+    
     btn:ClearAllPoints()
-    btn:SetPoint("CENTER", Minimap, "CENTER", x, y)
+    btn:SetPoint("CENTER", UIParent, "CENTER", cfg.minimap.x, cfg.minimap.y)
 end
 
 local function CreateButton()
@@ -115,21 +111,15 @@ local function CreateButton()
     btn:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         self.isDragging = false
-
-        -- save angle based on current cursor position around minimap
-        local mx, my = Minimap:GetCenter()
-        local cx, cy = GetCursorPosition()
-        local scale = UIParent:GetScale()
-        cx, cy = cx / scale, cy / scale
-
-        local dx, dy = cx - mx, cy - my
-        if dx == 0 and dy == 0 then return end -- avoid atan2(0,0)
-        local angle = math.deg(math.atan2(dy, dx))
-        SetAngle(self, angle)
+        
+        -- Save position relative to screen center
+        local x, y = self:GetCenter()
+        local px, py = UIParent:GetCenter()
+        SetPosition(self, x - px, y - py)
     end)
 
     local cfg = GetCharCfg()
-    SetAngle(btn, cfg.minimap.angle or 220)
+    SetPosition(btn, cfg.minimap.x, cfg.minimap.y)
 
     UpdateIconVisual(btn)
 end

@@ -91,12 +91,9 @@ function SSW.GetCheckPvpUrl(fullName)
         realm = GetRealmName and GetRealmName() or ""
     end
     
-    -- Convert realm name to URL-friendly format (lowercase, spaces to hyphens)
-    -- Note: This assumes check-pvp.fr uses lowercase realm/name format with hyphens for spaces.
-    -- If the site changes URL format or requires percent-encoding for special characters,
-    -- this function may need to be updated.
-    realm = realm:lower():gsub("%s+", "-")
-    name = name:lower()
+    -- Convert realm to URL format: replace spaces/apostrophes with hyphens
+    -- Character name preserves original capitalization (check-pvp.fr is case-sensitive)
+    realm = realm:gsub("[%s']+", "-")
     
     -- Auto-detect region (no user modification needed)
     local region = SSW.GetRegionCode()
