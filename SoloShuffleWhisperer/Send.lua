@@ -183,7 +183,12 @@ local function ProcessWhispers(isTest)
             
             -- Add to ignore list if requested
             if item.addToIgnore then
-                C_FriendList.AddIgnore(item.target)
+                local success = pcall(function()
+                    C_FriendList.AddIgnore(item.target)
+                end)
+                if not success then
+                    SSW.Print("Could not add " .. item.target .. " to ignore list (may be full or invalid name)")
+                end
             end
             
             -- Increment session stats
