@@ -18,10 +18,8 @@ local function BuildMessagesForRow(r)
     }
 
     -- Use the new function from Presets.lua
-    -- Never include name (per new requirement)
     local msg1, msg2 = SSW.BuildMessagesForTarget(
         r.playerName,
-        false,  -- Never include name
         r.cbBnet:GetChecked(),  -- includeSecond
         meta
     )
@@ -299,7 +297,7 @@ function SSW.SendImmediatelyWithIgnore(messageTemplate, skipAntiSpam)
                     }
                     
                     -- Use BuildMessagesForTarget to fill in placeholders
-                    finalMessage, _ = SSW.BuildMessagesForTarget(r.playerName, true, false, meta)
+                    finalMessage, _ = SSW.BuildMessagesForTarget(r.playerName, false, meta)
                 else
                     -- For non-random (like "..."), use the message as-is
                     finalMessage = messageTemplate

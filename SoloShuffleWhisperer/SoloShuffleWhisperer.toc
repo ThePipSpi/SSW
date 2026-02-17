@@ -9,10 +9,11 @@
 Core.lua
 Presets.lua
 AntiSpam.lua
-AutoGreet.lua
 Accessibility.lua
 MinimapButton.lua
 Snapshot.lua
 Triggers.lua
-UI.lua
+UIHelpers.lua
+Settings.lua
+SendUI.lua
 Send.lua

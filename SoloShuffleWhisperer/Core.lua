@@ -167,10 +167,8 @@ core:SetScript("OnEvent", function(self, event, arg1)
     if not SSW_Config then
         SSW_Config = {
             msg1Index = 1,
-            msg2Index = 1,
             preSendDelay = SSW.DEFAULT_PRE_SEND_DELAY,
             autoPartyThanksOnReward = false,
-            autoGreetEnabled = false,
             customLines = {},
             customBadLines = {},
             badModeEnabled = false,  -- BAD MODE locked by default
@@ -179,9 +177,6 @@ core:SetScript("OnEvent", function(self, event, arg1)
     -- Migrations: fill in keys missing from older saved configs
     if SSW_Config.autoPartyThanksOnReward == nil then
         SSW_Config.autoPartyThanksOnReward = false
-    end
-    if SSW_Config.autoGreetEnabled == nil then
-        SSW_Config.autoGreetEnabled = false
     end
     if not SSW_Config.customLines then
         SSW_Config.customLines = {}
