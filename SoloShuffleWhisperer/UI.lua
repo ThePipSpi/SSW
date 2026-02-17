@@ -315,7 +315,7 @@ end
 
 local sendWin = CreateFrame("Frame", "SSW_SendWin", UIParent, "BasicFrameTemplateWithInset")
 sendWin:SetSize(720, 580) -- Più larga per layout migliore
-sendWin:SetPoint("CENTER")
+sendWin:SetPoint("CENTER", 0, 80) -- Positioned higher to avoid action bars
 sendWin:SetMovable(true)
 sendWin:EnableMouse(true)
 sendWin:RegisterForDrag("LeftButton")
@@ -420,8 +420,8 @@ for i = 1, SSW.MAX_ROWS do
     
     -- PvP Check Button (clickable icon)
     r.pvpBtn = CreateFrame("Button", nil, r)
-    r.pvpBtn:SetSize(16, 16)
-    r.pvpBtn:SetPoint("LEFT", r.text, "RIGHT", 2, 0)
+    r.pvpBtn:SetSize(20, 20)  -- Increased from 16x16 to 20x20 for easier clicking
+    r.pvpBtn:SetPoint("LEFT", r.text, "RIGHT", 4, 0)
     r.pvpBtn:SetHighlightTexture("Interface\\BUTTONS\\UI-Common-MouseHilight")
     
     -- Create a custom icon using texture
@@ -889,11 +889,11 @@ function SSW.ShowWhisperWindow(isTest)
 
     if SSW.IsTesting then
         local t = {
-            { fullName = "TestWarrior-Realm", classFile = "WARRIOR", specName = "Arms",  specID = 71,  role = "DAMAGER" },
-            { fullName = "TestMage-Realm",    classFile = "MAGE",    specName = "Frost", specID = 64,  role = "DAMAGER" },
-            { fullName = "TestPriest-Realm",  classFile = "PRIEST",  specName = "Disc",  specID = 256, role = "HEALER" },
-            { fullName = "TestHunter-Realm",  classFile = "HUNTER",  specName = "BM",    specID = 253, role = "DAMAGER" },
-            { fullName = "TestPaladin-Realm", classFile = "PALADIN", specName = "Ret",   specID = 70,  role = "DAMAGER" },
+            { fullName = "Shadowstrike-TarrenMill",  classFile = "WARRIOR", specName = "Arms",  specID = 71,  role = "DAMAGER" },
+            { fullName = "Frostbite-Ravencrest",     classFile = "MAGE",    specName = "Frost", specID = 64,  role = "DAMAGER" },
+            { fullName = "Holyspark-Kazzak",         classFile = "PRIEST",  specName = "Disc",  specID = 256, role = "HEALER" },
+            { fullName = "Beastmaster-Silvermoon",   classFile = "HUNTER",  specName = "BM",    specID = 253, role = "DAMAGER" },
+            { fullName = "Lightbringer-Draenor",     classFile = "PALADIN", specName = "Ret",   specID = 70,  role = "DAMAGER" },
         }
         SSW.PartySnapshot = {
             takenAt = SSW.Now(),
