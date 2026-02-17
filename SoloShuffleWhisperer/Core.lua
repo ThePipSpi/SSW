@@ -9,8 +9,20 @@ SSW.MAX_ROWS = 5
 SSW.SEND_DELAY = 0.35
 SSW.DEFAULT_PRE_SEND_DELAY = 3.5
 SSW.MAX_LEN = 140
+SSW.MAX_CUSTOM_LINES = 10
 
 SSW.IsTesting = false
+
+-- Session statistics (reset on login)
+SSW.SessionStats = { sent = 0 }
+
+function SSW.GetSessionStats()
+    return SSW.SessionStats
+end
+
+function SSW.IncrementSentCount()
+    SSW.SessionStats.sent = (SSW.SessionStats.sent or 0) + 1
+end
 
 function SSW.Now()
     return GetTime and GetTime() or time()
@@ -26,10 +38,17 @@ function SSW.CleanName(fullName)
 end
 
 function SSW.GetMyBattleTag()
-    local ok, _, btag = pcall(function() return BNGetInfo() end)
-    if ok then
-        btag = tostring(btag or "")
-        if btag:find("#") then return btag end
+    local success, _, btag = pcall(function() 
+        if BNGetInfo then
+            return BNGetInfo() 
+        end
+        return nil, nil
+    end)
+    if success and btag then
+        btag = tostring(btag)
+        if btag:find("#") then
+            return btag
+        end
     end
     return ""
 end
@@ -86,6 +105,7 @@ core:SetScript("OnEvent", function(self, event, arg1)
             preSendDelay = SSW.DEFAULT_PRE_SEND_DELAY,
             autoPartyThanksOnReward = false,
             autoGreetEnabled = false,
+            customLines = {},
         }
     end
     -- Migrations: fill in keys missing from older saved configs
@@ -94,6 +114,9 @@ core:SetScript("OnEvent", function(self, event, arg1)
     end
     if SSW_Config.autoGreetEnabled == nil then
         SSW_Config.autoGreetEnabled = false
+    end
+    if not SSW_Config.customLines then
+        SSW_Config.customLines = {}
     end
 
     -- Per-character config (LIVE default ON)

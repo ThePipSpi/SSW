@@ -154,10 +154,11 @@ closeBtnCfg:SetText("Close")
 closeBtnCfg:SetNormalFontObject("GameFontNormalLarge")
 closeBtnCfg:SetScript("OnClick", function() configWin:Hide() end)
 
-local function MakeDropdown(parent, name, width, items, onPick)
+local function MakeDropdown(parent, name, width, getItemsFunc, onPick)
     local dd = CreateFrame("Frame", name, parent, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(dd, width)
     UIDropDownMenu_Initialize(dd, function(self, level)
+        local items = type(getItemsFunc) == "function" and getItemsFunc() or getItemsFunc
         local selected = UIDropDownMenu_GetSelectedID(dd) or 1
         for i, txt in ipairs(items) do
             local info   = UIDropDownMenu_CreateInfo()
@@ -179,7 +180,9 @@ local function MakeDropdown(parent, name, width, items, onPick)
     return dd
 end
 
-local dd1 = MakeDropdown(configWin, "SSW_DD1", 440, SSW.MSG1_PRESETS, function(i)
+local dd1 = MakeDropdown(configWin, "SSW_DD1", 440, function() 
+    return SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+end, function(i)
     SSW_Config.msg1Index = i
 end)
 dd1:SetPoint("TOPLEFT", section1, "TOPLEFT", -2, -32)
@@ -203,13 +206,14 @@ end)
 configWin:SetScript("OnShow", function()
     cbAutoGreet:SetChecked(SSW_Config and SSW_Config.autoGreetEnabled)
 
+    local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
     local i1 = tonumber(SSW_Config.msg1Index) or 1
     local i2 = tonumber(SSW_Config.msg2Index) or 1
-    if i1 < 1 or i1 > #SSW.MSG1_PRESETS then i1 = 1 end
+    if i1 < 1 or i1 > #msg1List then i1 = 1 end
     if i2 < 1 or i2 > #SSW.MSG2_PRESETS then i2 = 1 end
 
     UIDropDownMenu_SetSelectedID(dd1, i1)
-    UIDropDownMenu_SetText(dd1, SSW.MSG1_PRESETS[i1])
+    UIDropDownMenu_SetText(dd1, msg1List[i1])
     UIDropDownMenu_SetSelectedID(dd2, i2)
     UIDropDownMenu_SetText(dd2, SSW.MSG2_PRESETS[i2])
 
@@ -357,7 +361,8 @@ for i = 1, SSW.MAX_ROWS do
 
     UIDropDownMenu_Initialize(r.dropdown, function(self, level)
         local selectedIdx = r.msg1Index or 1
-        for idx, txt in ipairs(SSW.MSG1_PRESETS) do
+        local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+        for idx, txt in ipairs(msg1List) do
             local info = UIDropDownMenu_CreateInfo()
             info.text = txt
             info.checked = (idx == selectedIdx)
@@ -386,8 +391,12 @@ for i = 1, SSW.MAX_ROWS do
         r.cbBnet:SetEnabled(enabled)
         if enabled then
             r.dropdown:Show()
+            local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
             UIDropDownMenu_SetSelectedID(r.dropdown, r.msg1Index or 1)
-            UIDropDownMenu_SetText(r.dropdown, SSW.MSG1_PRESETS[r.msg1Index or 1])
+            local idx = r.msg1Index or 1
+            if idx >= 1 and idx <= #msg1List then
+                UIDropDownMenu_SetText(r.dropdown, msg1List[idx])
+            end
         else
             r.dropdown:Hide()
         end
@@ -507,60 +516,23 @@ function SSW.UI.UpdateRowPreview(r)
         return
     end
 
-    local i1 = r.msg1Index or 1 -- Usa l'indice della riga, non quello globale
-    local i2 = tonumber(SSW_Config.msg2Index) or 1
-    if i1 < 1 or i1 > #SSW.MSG1_PRESETS then i1 = 1 end
-    if i2 < 1 or i2 > #SSW.MSG2_PRESETS then i2 = 1 end
-
-    local tpl1 = SSW.MSG1_PRESETS[i1] or ""
-    local tpl2 = SSW.MSG2_PRESETS[i2] or ""
-
     local includeName = r.cbName:GetChecked()
     local includeSecond = r.cbBnet:GetChecked()
 
-    local function FillPlaceholders(s, data)
-        s = tostring(s or "")
-        if data.useName then
-            s = s:gsub("{name}", data.cleanName or "")
-        else
-            s = s:gsub("{name}", "")
-        end
-        s = s:gsub("{praise}", SSW.RandomPraise and SSW.RandomPraise() or "good job")
-        
-        -- Converti il ruolo in testo leggibile
-        local roleText = "DPS"
-        if data.role == "TANK" then
-            roleText = "Tank"
-        elseif data.role == "HEALER" then
-            roleText = "Healer"
-        elseif data.role == "DAMAGER" then
-            roleText = "DPS"
-        end
-        
-        s = s:gsub("{role}", roleText)
-        s = s:gsub("{spec}", data.specName or "")
-        s = s:gsub("{btag}", data.btag or "")
-        s = s:gsub("%s+", " ")
-        s = s:gsub("^%s+", "")
-        s = s:gsub("%s+$", "")
-        return s
-    end
+    -- Build meta data for the new BuildMessagesForTarget function
+    local meta = {
+        role = r.role or "NONE",
+        specID = r.specID or 0,
+        msg1Index = r.msg1Index or 1,
+    }
 
-    local msg1 = FillPlaceholders(tpl1, {
-        useName = includeName,
-        cleanName = SSW.CleanName(r.playerName),
-        specName = r.specName or "",
-        role = r.role or "DPS",
-        btag = SSW.GetMyBattleTag and SSW.GetMyBattleTag() or "",
-    })
-
-    local msg2 = FillPlaceholders(tpl2, {
-        useName = includeName,
-        cleanName = SSW.CleanName(r.playerName),
-        specName = r.specName or "",
-        role = r.role or "DPS",
-        btag = SSW.GetMyBattleTag and SSW.GetMyBattleTag() or "",
-    })
+    -- Use the new function from Presets.lua
+    local msg1, msg2 = SSW.BuildMessagesForTarget(
+        r.playerName,
+        includeName,
+        includeSecond,
+        meta
+    )
 
     local line = msg1
     if includeSecond and msg2 ~= "" then line = line .. " | " .. msg2 end
