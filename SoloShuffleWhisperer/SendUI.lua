@@ -260,6 +260,31 @@ for i = 1, SSW.MAX_ROWS do
     UIDropDownMenu_Initialize(r.dropdown, function(self, level)
         local selectedIdx = r.msg1Index
         local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+        
+        -- Add "None" option at the top to allow deselection
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = "-- None --"
+        info.checked = (selectedIdx == nil)
+        info.func = function()
+            r.msg1Index = nil
+            UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
+            -- Update checkbox visibility (hide both)
+            UpdateCheckboxVisibility(r)
+            CloseDropDownMenus()
+            if SSW.UI.UpdateRowPreview then
+                SSW.UI.UpdateRowPreview(r)
+            end
+        end
+        UIDropDownMenu_AddButton(info, level)
+        
+        -- Add separator
+        local separator = UIDropDownMenu_CreateInfo()
+        separator.text = ""
+        separator.isTitle = true
+        separator.notCheckable = true
+        UIDropDownMenu_AddButton(separator, level)
+        
+        -- Add actual messages
         for idx, txt in ipairs(msg1List) do
             local info = UIDropDownMenu_CreateInfo()
             info.text = txt
@@ -296,6 +321,31 @@ for i = 1, SSW.MAX_ROWS do
     UIDropDownMenu_Initialize(r.badDropdown, function(self, level)
         local selectedIdx = r.badMsgIndex
         local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
+        
+        -- Add "None" option at the top to allow deselection
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = "-- None --"
+        info.checked = (selectedIdx == nil)
+        info.func = function()
+            r.badMsgIndex = nil
+            UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
+            -- Update checkbox visibility (hide both)
+            UpdateCheckboxVisibility(r)
+            CloseDropDownMenus()
+            if SSW.UI.UpdateRowPreview then
+                SSW.UI.UpdateRowPreview(r)
+            end
+        end
+        UIDropDownMenu_AddButton(info, level)
+        
+        -- Add separator
+        local separator = UIDropDownMenu_CreateInfo()
+        separator.text = ""
+        separator.isTitle = true
+        separator.notCheckable = true
+        UIDropDownMenu_AddButton(separator, level)
+        
+        -- Add actual messages
         for idx, txt in ipairs(badList) do
             local info = UIDropDownMenu_CreateInfo()
             info.text = txt
@@ -529,7 +579,6 @@ function SSW.UI.UpdateRowPreview(r)
         -- Build messages WITHOUT name parameter
         local msg1, msg2 = SSW.BuildMessagesForTarget(
             r.playerName,
-            false,  -- Never include name
             includeSecond,
             meta
         )
@@ -564,6 +613,34 @@ function SSW.UI.RebuildRowMessageDropdowns()
             UIDropDownMenu_Initialize(r.dropdown, function(self, level)
                 local selectedIdx = r.msg1Index
                 local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+                
+                -- Add "None" option
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = "-- None --"
+                info.checked = (selectedIdx == nil)
+                info.func = function()
+                    r.msg1Index = nil
+                    UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
+                    r.badMsgIndex = nil
+                    if r.badDropdown then
+                        UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
+                    end
+                    UpdateCheckboxVisibility(r)
+                    CloseDropDownMenus()
+                    if SSW.UI.UpdateRowPreview then
+                        SSW.UI.UpdateRowPreview(r)
+                    end
+                end
+                UIDropDownMenu_AddButton(info, level)
+                
+                -- Separator
+                local separator = UIDropDownMenu_CreateInfo()
+                separator.text = ""
+                separator.isTitle = true
+                separator.notCheckable = true
+                UIDropDownMenu_AddButton(separator, level)
+                
+                -- Actual messages
                 for idx, txt in ipairs(msg1List) do
                     local info = UIDropDownMenu_CreateInfo()
                     info.text = txt
@@ -599,6 +676,30 @@ function SSW.UI.RebuildRowMessageDropdowns()
             UIDropDownMenu_Initialize(r.badDropdown, function(self, level)
                 local selectedIdx = r.badMsgIndex
                 local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
+                
+                -- Add "None" option
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = "-- None --"
+                info.checked = (selectedIdx == nil)
+                info.func = function()
+                    r.badMsgIndex = nil
+                    UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
+                    UpdateCheckboxVisibility(r)
+                    CloseDropDownMenus()
+                    if SSW.UI.UpdateRowPreview then
+                        SSW.UI.UpdateRowPreview(r)
+                    end
+                end
+                UIDropDownMenu_AddButton(info, level)
+                
+                -- Separator
+                local separator = UIDropDownMenu_CreateInfo()
+                separator.text = ""
+                separator.isTitle = true
+                separator.notCheckable = true
+                UIDropDownMenu_AddButton(separator, level)
+                
+                -- Actual messages
                 for idx, txt in ipairs(badList) do
                     local info = UIDropDownMenu_CreateInfo()
                     info.text = txt

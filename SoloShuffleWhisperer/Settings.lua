@@ -90,8 +90,51 @@ for ci = 1, SSW.MAX_CUSTOM_LINES do
     customBoxes[ci] = box
 end
 
+-- ── BAD MODE Section ──
+local yBadMode = y - 32 - (SSW.MAX_CUSTOM_LINES * (CUSTOM_BOX_H + CUSTOM_GAP)) - 20
+
+local cbBadMode = CreateFrame("CheckButton", nil, scrollChild, "ChatConfigCheckButtonTemplate")
+cbBadMode:SetPoint("TOPLEFT", 18, yBadMode)
+cbBadMode.Text:ClearAllPoints()
+cbBadMode.Text:SetPoint("LEFT", cbBadMode, "RIGHT", 6, 1)
+cbBadMode.Text:SetWidth(370)
+cbBadMode.Text:SetJustifyH("LEFT")
+cbBadMode.Text:SetText("|cFFFF4444BAD MODE|r - Unlock negative/critical messages")
+cbBadMode:SetScript("OnClick", function(self)
+    local checked = self:GetChecked()
+    if checked then
+        -- Show warning dialog
+        StaticPopup_Show("SSW_BAD_MODE_WARNING")
+    else
+        SSW_Config.badModeEnabled = false
+        SSW.Print("BAD MODE disabled.")
+        -- Hide BAD dropdowns in whisper window
+        if SSW.UI and SSW.UI.rows then
+            for i = 1, SSW.MAX_ROWS do
+                local r = SSW.UI.rows[i]
+                if r and r.badDropdown then
+                    r.badDropdown:Hide()
+                end
+                if r and r.cbIgnore then
+                    r.cbIgnore:Hide()
+                end
+            end
+        end
+        -- Hide custom BAD message boxes
+        UpdateBadCustomBoxesVisibility()
+    end
+end)
+
+-- BAD MODE warning text
+local badModeWarning = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+badModeWarning:SetPoint("TOPLEFT", cbBadMode, "BOTTOMLEFT", 0, -5)
+badModeWarning:SetWidth(370)
+badModeWarning:SetJustifyH("LEFT")
+badModeWarning:SetText("|cFFFF8800WARNING:|r May result in reports. Use responsibly.")
+badModeWarning:SetTextColor(1, 0.5, 0, 1)
+
 -- ── Section: Custom BAD Lines (only visible when BAD MODE enabled) ──
-local yBadCustom = y - 32 - (SSW.MAX_CUSTOM_LINES * (CUSTOM_BOX_H + CUSTOM_GAP)) - 10
+local yBadCustom = yBadMode - 50  -- Position below BAD MODE warning
 yBadCustom = AddSectionHeader(scrollChild, "CUSTOM BAD MESSAGE LINES  (excluded from Random)", yBadCustom)
 
 local badCustLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -157,6 +200,37 @@ local function UpdateBadCustomBoxesVisibility()
     end
 end
 
+-- BAD MODE confirmation dialog
+if not StaticPopupDialogs["SSW_BAD_MODE_WARNING"] then
+    StaticPopupDialogs["SSW_BAD_MODE_WARNING"] = {
+        text = "|cFFFF4444Enable BAD MODE?|r\n\nThis unlocks the ability to send negative/critical messages to other players.\n\n|cFFFF8800WARNING:|r Using this feature may result in reports or account action if you harass other players.\n\nAre you sure you want to enable this?",
+        button1 = "Yes, Enable",
+        button2 = "Cancel",
+        OnAccept = function()
+            SSW_Config.badModeEnabled = true
+            cbBadMode:SetChecked(true)
+            SSW.Print("|cFFFF4444BAD MODE|r enabled. Use responsibly.")
+            -- Show BAD dropdowns in whisper window
+            if SSW.UI and SSW.UI.rows then
+                for i = 1, SSW.MAX_ROWS do
+                    local r = SSW.UI.rows[i]
+                    if r and r.badDropdown and r:IsShown() then
+                        r.badDropdown:Show()
+                    end
+                end
+            end
+            -- Show custom BAD message boxes
+            UpdateBadCustomBoxesVisibility()
+        end,
+        OnCancel = function()
+            cbBadMode:SetChecked(false)
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+    }
+end
+
 -- Calculate scroll child height dynamically
 local baseHeight = math.abs(yBadCustom) + 200
 scrollChild:SetHeight(baseHeight)
@@ -169,6 +243,9 @@ closeBtnCfg:SetNormalFontObject("GameFontNormalLarge")
 closeBtnCfg:SetScript("OnClick", function() configWin:Hide() end)
 
 configWin:SetScript("OnShow", function()
+    -- Set BAD MODE checkbox state
+    cbBadMode:SetChecked(SSW_Config and SSW_Config.badModeEnabled)
+    
     -- Populate custom line edit boxes
     for ci = 1, SSW.MAX_CUSTOM_LINES do
         local box = customBoxes[ci]

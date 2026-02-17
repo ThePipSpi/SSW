@@ -8,17 +8,17 @@ SSW = SSW or {}
 
 -- Msg1 = short gg / thanks
 -- Placeholders:
---   {name}   (no realm)
 --   {praise} (neutral + randomized)
 --   {role}   (Tank / Healer / DPS)
 --   {spec}   (best effort, e.g. "Holy")
+--   {btag}   (BattleTag)
 SSW.MSG1_PRESETS = {
-    "gg {name}",
-    "ty {name}!",
-    "good games {name}!",
+    "gg",
+    "ty!",
+    "good games!",
     "Random",
-    "{praise} {name}",
-    "gg {name} :)",
+    "{praise}",
+    "gg :)",
     "nice games!",
 }
 
@@ -36,13 +36,13 @@ SSW.MSG2_PRESETS = {
 -- Philosophy: "Less talk is better" applies even to negative feedback
 SSW.BAD_MODE_PRESETS = {
     "...",
-    "learn your spec {name}",
-    "you threw {name}",
-    "stop tunneling {name}",
-    "peel next time {name}",
+    "learn your spec",
+    "you threw",
+    "stop tunneling",
+    "peel next time",
     "Random",
-    "watch positioning {name}",
-    "check your gear {name}",
+    "watch positioning",
+    "check your gear",
 }
 
 -- Custom lines are appended at runtime but excluded from Random selection
@@ -241,11 +241,10 @@ end
 --   meta.specID = number
 --   meta.msg1Index = number (optional override for message 1 selection)
 -- =========================================
-function SSW.BuildMessagesForTarget(targetFullName, includeName, includeSecond, meta)
+function SSW.BuildMessagesForTarget(targetFullName, includeSecond, meta)
     meta = meta or {}
 
     local clean = SSW.CleanName(targetFullName)
-    local namePart = includeName and clean or ""
 
     local role = meta.role
     if role == "NONE" or role == "" or role == nil then
@@ -267,7 +266,6 @@ function SSW.BuildMessagesForTarget(targetFullName, includeName, includeSecond, 
 
     local msg1 = SSW.CleanOutgoing(
         tpl1
-            :gsub("{name}", namePart)
             :gsub("{btag}", myBtag)
             :gsub("{praise}", praise)
             :gsub("{role}", roleTxt)
@@ -279,7 +277,6 @@ function SSW.BuildMessagesForTarget(targetFullName, includeName, includeSecond, 
     if includeSecond then
         msg2 = SSW.CleanOutgoing(
             tpl2
-                :gsub("{name}", namePart)
                 :gsub("{btag}", myBtag)
                 :gsub("{praise}", praise)
                 :gsub("{role}", roleTxt)
@@ -347,10 +344,9 @@ function SSW.BuildBadMessage(targetFullName, badMsgIndex, meta)
         end
     end
     
-    -- Apply placeholders
+    -- Apply placeholders (NO {name})
     local badMsg = SSW.CleanOutgoing(
         badTemplate
-            :gsub("{name}", clean)
             :gsub("{role}", roleTxt)
             :gsub("{spec}", specName)
     )
