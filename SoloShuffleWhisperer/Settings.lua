@@ -93,6 +93,9 @@ end
 -- ── BAD MODE Section ──
 local yBadMode = y - 32 - (SSW.MAX_CUSTOM_LINES * (CUSTOM_BOX_H + CUSTOM_GAP)) - 20
 
+-- Forward declaration for function used in checkbox handlers below
+local UpdateBadCustomBoxesVisibility
+
 local cbBadMode = CreateFrame("CheckButton", nil, scrollChild, "ChatConfigCheckButtonTemplate")
 cbBadMode:SetPoint("TOPLEFT", 18, yBadMode)
 cbBadMode.Text:ClearAllPoints()
@@ -185,7 +188,7 @@ scrollChild.badCustLabel = badCustLabel
 scrollChild.yBadCustomAfter = yBadCustom - 32 - (SSW.MAX_CUSTOM_BAD_LINES * (CUSTOM_BOX_H + CUSTOM_GAP))
 
 -- Helper function to show/hide custom BAD boxes
-local function UpdateBadCustomBoxesVisibility()
+UpdateBadCustomBoxesVisibility = function()
     local enabled = SSW_Config and SSW_Config.badModeEnabled
     badCustLabel:SetShown(enabled)
     for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
