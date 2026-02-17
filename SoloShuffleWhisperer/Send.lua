@@ -18,9 +18,10 @@ local function BuildMessagesForRow(r)
     }
 
     -- Use the new function from Presets.lua
+    -- Never include name (per new requirement)
     local msg1, msg2 = SSW.BuildMessagesForTarget(
         r.playerName,
-        r.cbName:GetChecked(),  -- includeName
+        false,  -- Never include name
         r.cbBnet:GetChecked(),  -- includeSecond
         meta
     )
@@ -191,8 +192,8 @@ local function ProcessWhispers(isTest)
         SSW.AntiSpam.MarkBurstStart()
     end
 
-    -- Get delay
-    local preSendDelay = tonumber(SSW_Config.preSendDelay) or SSW.DEFAULT_PRE_SEND_DELAY
+    -- Fixed delay of 3 seconds
+    local preSendDelay = 3
 
     SSW.Print("Waiting " .. preSendDelay .. " seconds before sending " .. #queue .. " whisper(s)...")
 

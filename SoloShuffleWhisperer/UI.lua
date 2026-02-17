@@ -194,28 +194,9 @@ local hint2 = section2:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 hint2:SetPoint("TOPLEFT", lbl2, "BOTTOMLEFT", 0, -2)
 hint2:SetText("Optional second message with BattleTag info")
 
--- Sezione Delay
-local section3 = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-section3:SetPoint("TOPLEFT", 12, yBehav - 208)
-section3:SetPoint("TOPRIGHT", -12, yBehav - 208)
-section3:SetHeight(50)
-section3:SetBackdrop({
-    bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 16,
-    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-})
-section3:SetBackdropColor(0.05, 0.05, 0.05, 0.5)
-section3:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-
-local lblDelay = section3:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-lblDelay:SetPoint("TOPLEFT", 10, -8)
-lblDelay:SetText("LIVE Mode: Delay before sending (seconds)")
-lblDelay:SetTextColor(1, 0.82, 0, 1)
-
 -- Checkboxes
 local cbAutoGreet = CreateFrame("CheckButton", nil, scrollChild, "ChatConfigCheckButtonTemplate")
-cbAutoGreet:SetPoint("TOPLEFT", 18, yBehav - 275)
+cbAutoGreet:SetPoint("TOPLEFT", 18, yBehav - 208)
 cbAutoGreet.Text:ClearAllPoints()
 cbAutoGreet.Text:SetPoint("LEFT", cbAutoGreet, "RIGHT", 6, 1)
 cbAutoGreet.Text:SetWidth(370)
@@ -269,7 +250,7 @@ badModeWarning:SetTextColor(1, 0.5, 0, 1)
 
 -- ── Section: Custom BAD Lines (only visible when BAD MODE enabled) ──
 local yBadCustom = AddSectionHeader(scrollChild, "CUSTOM BAD MESSAGE LINES  (excluded from Random)", -10)
-yBadCustom = yBehav - 330  -- Position below warning
+yBadCustom = yBehav - 265  -- Position below warning (adjusted since delay section removed)
 
 local badCustLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 badCustLabel:SetPoint("TOPLEFT", 18, yBadCustom)
@@ -421,19 +402,8 @@ local dd2 = MakeDropdown(scrollChild, "SSW_DD2", 360, SSW.MSG2_PRESETS, function
 end)
 dd2:SetPoint("TOPLEFT", section2, "TOPLEFT", -2, -32)
 
-local delayBox = CreateFrame("EditBox", "SSW_DelayBox", scrollChild, "InputBoxTemplate")
-delayBox:SetSize(80, 30)
-delayBox:SetPoint("TOPLEFT", section3, "TOPLEFT", 10, -24)
-delayBox:SetAutoFocus(false)
-delayBox:SetScript("OnEnterPressed", function(self)
-    self:ClearFocus()
-    local v = tonumber(self:GetText())
-    if not v then v = SSW.DEFAULT_PRE_SEND_DELAY end
-    SSW_Config.preSendDelay = math.max(0, v)
-end)
-
 -- Set scroll child height to fit all content
-local totalHeight = math.abs(yBehav - 275) + 80  -- Calculate total content height
+local totalHeight = math.abs(yBehav - 210) + 80  -- Calculate total content height (adjusted)
 scrollChild:SetHeight(totalHeight)
 
 configWin:SetScript("OnShow", function()
@@ -451,8 +421,6 @@ configWin:SetScript("OnShow", function()
     UIDropDownMenu_SetText(dd1, msg1List[i1])
     UIDropDownMenu_SetSelectedID(dd2, i2)
     UIDropDownMenu_SetText(dd2, SSW.MSG2_PRESETS[i2])
-
-    delayBox:SetText(tostring(SSW_Config.preSendDelay or SSW.DEFAULT_PRE_SEND_DELAY))
     
     -- Populate custom line edit boxes
     for ci = 1, SSW.MAX_CUSTOM_LINES do
@@ -558,23 +526,18 @@ h2:SetTextColor(1, 0.82, 0, 1)
 
 local h3 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h3:SetPoint("LEFT", 328, 0)
-h3:SetText("Name")
+h3:SetText("BNet")
 h3:SetTextColor(1, 0.82, 0, 1)
 
 local h4 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h4:SetPoint("LEFT", 388, 0)
-h4:SetText("BNet")
+h4:SetText("Bad")
 h4:SetTextColor(1, 0.82, 0, 1)
 
 local h5 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h5:SetPoint("LEFT", 448, 0)
-h5:SetText("Bad")
+h5:SetText("Blame")
 h5:SetTextColor(1, 0.82, 0, 1)
-
-local h6 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-h6:SetPoint("LEFT", 508, 0)
-h6:SetText("Blame")
-h6:SetTextColor(1, 0.82, 0, 1)
 
 -- Rows
 local rows = {}
@@ -705,22 +668,23 @@ for i = 1, SSW.MAX_ROWS do
     r.cbMain:SetSize(26, 26)
     r.cbMain:SetPoint("TOPLEFT", 268, -6)
 
-    -- Checkbox "Use {name}"
+    -- Checkbox "Use {name}" - HIDDEN per nuovo requisito
     r.cbName = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbName:SetSize(26, 26)
     r.cbName:SetPoint("TOPLEFT", 328, -6)
     r.cbName:SetEnabled(false)
+    r.cbName:Hide()  -- Always hidden now
 
     -- Checkbox "+ BNet"
     r.cbBnet = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBnet:SetSize(26, 26)
-    r.cbBnet:SetPoint("TOPLEFT", 388, -6)
+    r.cbBnet:SetPoint("TOPLEFT", 328, -6)  -- Moved to where Name was
     r.cbBnet:SetEnabled(false)
 
     -- Checkbox "Bad" (BAD MODE - negative messages)
     r.cbBad = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBad:SetSize(26, 26)
-    r.cbBad:SetPoint("TOPLEFT", 448, -6)
+    r.cbBad:SetPoint("TOPLEFT", 388, -6)  -- Moved left
     r.cbBad:SetEnabled(false)
     if not SSW.IsBadModeEnabled or not SSW.IsBadModeEnabled() then
         r.cbBad:Hide()
@@ -746,7 +710,7 @@ for i = 1, SSW.MAX_ROWS do
     -- Checkbox "Blame" (sends "..." and ignores)
     r.cbBlame = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBlame:SetSize(26, 26)
-    r.cbBlame:SetPoint("TOPLEFT", 508, -6)
+    r.cbBlame:SetPoint("TOPLEFT", 448, -6)  -- Moved left
     r.cbBlame:SetEnabled(false)
 
     -- Dropdown per msg1 (seconda riga, più grande)
@@ -814,7 +778,7 @@ for i = 1, SSW.MAX_ROWS do
     r.preview:SetJustifyH("LEFT")
 
     function r:SetEnabledSubs(enabled)
-        r.cbName:SetEnabled(enabled)
+        -- r.cbName:SetEnabled(enabled)  -- Name checkbox always hidden now
         r.cbBnet:SetEnabled(enabled)
         if SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
             r.cbBad:SetEnabled(enabled)
@@ -861,7 +825,7 @@ for i = 1, SSW.MAX_ROWS do
     end)
 
     r.cbName:SetScript("OnClick", function()
-        -- If Name is checked, uncheck Bad and Blame (good will mode)
+        -- Name checkbox is now hidden and disabled - kept for compatibility
         if r.cbName:GetChecked() then
             if r.cbBad then r.cbBad:SetChecked(false) end
             r.cbBlame:SetChecked(false)
@@ -988,14 +952,6 @@ local btnBlameAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnBlameAll:SetSize(100, 36)
 btnBlameAll:SetPoint("LEFT", btnThankAll, "RIGHT", 8, 0)
 btnBlameAll:SetText("Blame All")
-
-local btnSettings = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnSettings:SetSize(120, 36)
-btnSettings:SetPoint("BOTTOMRIGHT", -238, 15)
-btnSettings:SetText("Settings")
-btnSettings:SetScript("OnClick", function()
-    if SSW.ShowSettings then SSW.ShowSettings() end
-end)
 
 local btnClose = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnClose:SetSize(100, 36)
@@ -1152,7 +1108,7 @@ function SSW.UI.UpdateRowPreview(r)
         return
     end
 
-    local includeName = r.cbName:GetChecked()
+    local includeName = false  -- Never include name (per new requirement)
     local includeSecond = r.cbBnet:GetChecked()
 
     -- Build meta data for the new BuildMessagesForTarget function
