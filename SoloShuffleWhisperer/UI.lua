@@ -453,14 +453,14 @@ for i = 1, SSW.MAX_ROWS do
                     hideOnEscape = true,
                     hasEditBox = true,
                     OnShow = function(self, data)
-                        -- Find the editBox - try multiple common methods
-                        local editBox = self.editBox or self:GetChildren()
+                        -- Try to access editBox immediately
+                        local editBox = self.editBox
                         if editBox and editBox.SetText then
                             editBox:SetText(data or "")
                             editBox:HighlightText()
                             editBox:SetFocus()
                         else
-                            -- Fallback: try after a delay
+                            -- Fallback: try after a short delay for WoW 11.0+ compatibility
                             C_Timer.After(0.05, function()
                                 local eb = self.editBox
                                 if eb and eb.SetText then
