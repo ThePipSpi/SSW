@@ -31,11 +31,6 @@ A World of Warcraft addon for The War Within (11.0+) that helps you send friendl
   - SAFE mode (preview only, no messages sent)
   - LIVE mode (actually sends whispers)
   - TEST mode (for testing with dummy data)
-- **Accessibility Features**:
-  - One-Tap mode for quick "thanks all" with a single button
-  - Visual countdown before sending
-  - Auto-greeting when joining groups (optional)
-  - Blame checkbox for quick dismissal of toxic players (sends "..." and adds to ignore list)
 - **Anti-Spam Protection**: Prevents duplicate messages and respects cooldowns
 - **Minimap Button**: Easy access with left-click (open), right-click (settings), Shift+click (toggle mode)
 - **Custom Message Lines**: Add up to 10 custom messages that persist across sessions
@@ -95,7 +90,7 @@ The whisper window allows you to select which players to message and how:
 
 ## Settings
 
-- **Custom Message Lines**: Write up to 10 personalized messages in the settings window. These appear in message dropdowns but are never selected by "Random".
+- **Custom Message Lines**: Write up to 10 personalized messages in the settings window. These appear in message dropdowns.
 - **Message 1**: Primary thank-you message (always sent)
 - **Message 2**: Optional Battle.net tag invitation
 - **Delay**: Countdown time before sending in LIVE mode
@@ -110,7 +105,7 @@ The addon now includes a **Custom Message Lines** section in settings where you 
 3. Type your custom messages in any of the 10 available text boxes
 4. Your custom messages will appear in the message dropdown when selecting players
 5. Custom messages support all placeholders: `{name}`, `{praise}`, `{role}`, `{spec}`, `{btag}`
-6. Custom messages are automatically saved and excluded from "Random" selection
+6. Custom messages are automatically saved
 
 **Example custom messages:**
 - `great plays {name}!`
@@ -134,7 +129,6 @@ Following the core principle: **"In PVP less talk is better... but many times yo
 - Focus on "gg" and "thanks" rather than performance commentary
 - Avoid role-specific praise that could be misread as sarcasm
 - Keep it simple, positive, and drama-free
-- Use the "Random" option to vary messages naturally
 
 ### PVP Profile Integration
 
@@ -184,7 +178,6 @@ SSW.MSG1_PRESETS = {
     "gg {name}",
     "ty {name}!",
     "good games {name}!",
-    "Random",
     "{praise} {name}",
     "gg {name} :)",
     "nice games!",
@@ -198,7 +191,6 @@ SSW.MSG1_PRESETS = {
     "gg {name}",
     "ty {name}!",
     "good games {name}!",
-    "Random",
     "{praise} {name}",
     "gg {name} :)",
     "nice games!",
@@ -216,7 +208,6 @@ SSW.MSG2_PRESETS = {
     "if you wanna queue again: {btag}",
     "feel free to add me: {btag}",
     "up for more games? {btag}",
-    "Random",
     "if you want to queue more: {btag}",
 }
 ```
@@ -228,7 +219,6 @@ SSW.MSG2_PRESETS = {
     "if you wanna queue again: {btag}",
     "feel free to add me: {btag}",
     "up for more games? {btag}",
-    "Random",
     "if you want to queue more: {btag}",
     "let's queue together: {btag}",        -- NEW
     "add me for future games: {btag}",     -- NEW
@@ -483,7 +473,6 @@ Overview of all addon files and their purposes:
 | **Snapshot.lua** | Party roster tracking and snapshots | Modify tracking behavior |
 | **Send.lua** | Message sending logic and queue management | Sending behavior, delays |
 | **UI.lua** | Main UI window, settings panel, player rows | UI layout, button behavior |
-| **Accessibility.lua** | One-tap mode and accessibility features | Quick-send behavior |
 | **AutoGreet.lua** | Automatic greeting when joining groups | Greeting message, timing |
 | **MinimapButton.lua** | Minimap button creation and behavior | Button position, tooltips |
 | **AntiSpam.lua** | Spam protection and cooldown tracking | Cooldown times, limits |
@@ -577,10 +566,6 @@ Overview of all addon files and their purposes:
 **A**: 
 - **Message 1**: Primary thank-you message (always available)
 - **Message 2**: Optional BattleTag invitation
-
-### Q: How does "Random" work in presets?
-
-**A**: When you select "Random", the addon randomly picks from all non-custom presets in the list (excluding other "Random" entries and custom messages).
 
 ### Q: Why are the messages so short?
 

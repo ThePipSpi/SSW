@@ -69,7 +69,21 @@ local function ProcessWhispers(isTest)
                 hideOnEscape = true,
                 preferredIndex = 3,
                 OnAccept = function()
-                    -- Call ProcessWhispers again but skip the confirmation check
+                    -- Show second confirmation
+                    StaticPopup_Show("SSW_CONFIRM_BAD_WHISPERS_2")
+                end,
+            }
+        end
+        if not StaticPopupDialogs["SSW_CONFIRM_BAD_WHISPERS_2"] then
+            StaticPopupDialogs["SSW_CONFIRM_BAD_WHISPERS_2"] = {
+                text = "|cFFFF4040FINAL WARNING:|r Are you REALLY sure?\n\nThis action cannot be undone. BAD whispers will be sent to other players.",
+                button1 = "Yes, I'm sure",
+                button2 = "Cancel",
+                timeout = 0,
+                whileDead = true,
+                hideOnEscape = true,
+                preferredIndex = 3,
+                OnAccept = function()
                     ProcessWhispersInternal(isTest)
                 end,
             }
@@ -272,7 +286,7 @@ end
 -- Used by "Ty All" and "Blame All" buttons
 -- messageTemplate can be:
 --   - A string template (for "Blame All" with "...")
---   - "RANDOM" to send random non-custom messages (for "Ty All")
+--   - "FIRST_PRESET" to send the first preset message (for "Ty All")
 function SSW.SendImmediatelyWithIgnore(messageTemplate, skipAntiSpam)
     if not SSW.UI or not SSW.UI.rows then
         SSW.Print("UI not ready.")
@@ -312,23 +326,12 @@ function SSW.SendImmediatelyWithIgnore(messageTemplate, skipAntiSpam)
             if canSend then
                 local finalMessage = messageTemplate
                 
-                -- If RANDOM, select a random non-custom preset for each player
-                if messageTemplate == "RANDOM" then
-                    local presetIndices = {}
-                    for idx = 1, #SSW.MSG1_PRESETS do
-                        local preset = SSW.MSG1_PRESETS[idx]
-                        if type(preset) == "string" and preset ~= "Random" then
-                            table.insert(presetIndices, idx)
-                        end
-                    end
-                    
+                -- If FIRST_PRESET, select the first preset for each player
+                if messageTemplate == "FIRST_PRESET" then
                     local selectedIdx = 1
-                    if #presetIndices > 0 then
-                        selectedIdx = presetIndices[math.random(1, #presetIndices)]
-                    end
                     
                     -- Get the template
-                    local template = SSW.MSG1_PRESETS[selectedIdx] or "gg {name}"
+                    local template = SSW.MSG1_PRESETS[selectedIdx] or "gg"
                     
                     -- Build meta data for the message
                     local meta = {
@@ -340,7 +343,7 @@ function SSW.SendImmediatelyWithIgnore(messageTemplate, skipAntiSpam)
                     -- Use BuildMessagesForTarget to fill in placeholders
                     finalMessage, _ = SSW.BuildMessagesForTarget(r.playerName, false, meta)
                 else
-                    -- For non-random (like "..."), use the message as-is
+                    -- For static templates (like "..."), use the message as-is
                     finalMessage = messageTemplate
                 end
                 

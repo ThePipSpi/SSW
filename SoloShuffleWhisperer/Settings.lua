@@ -25,10 +25,10 @@ local function AddSectionHeader(parent, text, yOff)
 end
 
 -- Custom Text Lines section
-local y = AddSectionHeader(scrollChild, "CUSTOM MESSAGE LINES  (excluded from Random)", -10)
+local y = AddSectionHeader(scrollChild, "CUSTOM MESSAGE LINES", -10)
 local custLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 custLabel:SetPoint("TOPLEFT", 18, y); custLabel:SetWidth(400); custLabel:SetJustifyH("LEFT")
-custLabel:SetText("Write your own messages below. They appear in the send window message dropdown but are never picked by \"Random\".\nPlaceholders: {praise}, {role}, {spec}, {btag}")
+custLabel:SetText("Write your own messages below. They appear in the send window message dropdown.\nPlaceholders: {praise}, {role}, {spec}, {btag}")
 
 local CUSTOM_BOX_H, CUSTOM_GAP, customBoxes = 22, 4, {}
 for ci = 1, SSW.MAX_CUSTOM_LINES do
@@ -75,7 +75,7 @@ badModeWarning:SetPoint("TOPLEFT", cbBadMode, "BOTTOMLEFT", 0, -5); badModeWarni
 badModeWarning:SetText("|cFFFF8800WARNING:|r May result in reports. Use responsibly."); badModeWarning:SetTextColor(1, 0.5, 0, 1)
 
 -- Custom BAD Lines section
-local yBadCustom, badSectionSep, badSectionLabel = AddSectionHeader(scrollChild, "CUSTOM BAD MESSAGE LINES  (excluded from Random)", yBadMode - 50)
+local yBadCustom, badSectionSep, badSectionLabel = AddSectionHeader(scrollChild, "CUSTOM BAD MESSAGE LINES", yBadMode - 50)
 local badCustLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 badCustLabel:SetPoint("TOPLEFT", 18, yBadCustom); badCustLabel:SetWidth(400); badCustLabel:SetJustifyH("LEFT")
 badCustLabel:SetText("Write your own BAD messages below (only visible when BAD MODE enabled).\nPlaceholders: {praise}, {role}, {spec}, {btag}")

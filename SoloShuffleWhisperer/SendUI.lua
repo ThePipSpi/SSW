@@ -260,7 +260,7 @@ for i = 1, SSW.MAX_ROWS do
     r.goodLabel:Hide()
     
     r.dropdown = CreateFrame("Frame", "SSW_RowDD_" .. i, r, "UIDropDownMenuTemplate")
-    UIDropDownMenu_SetWidth(r.dropdown, 280)
+    UIDropDownMenu_SetWidth(r.dropdown, 140)
     r.dropdown:SetPoint("TOPLEFT", 0, -30)
     r.dropdown:SetScale(0.9)
     UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
@@ -328,7 +328,7 @@ for i = 1, SSW.MAX_ROWS do
     r.badLabel:Hide()
     
     r.badDropdown = CreateFrame("Frame", "SSW_RowBadDD_" .. i, r, "UIDropDownMenuTemplate")
-    UIDropDownMenu_SetWidth(r.badDropdown, 280)
+    UIDropDownMenu_SetWidth(r.badDropdown, 140)
     r.badDropdown:SetPoint("TOPLEFT", 290, -30)
     r.badDropdown:SetScale(0.9)
     UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
@@ -584,23 +584,6 @@ function SSW.UI.UpdateRowPreview(r)
             -- Strip custom tag if present
             if type(badTemplate) == "string" and badTemplate:sub(1, #SSW.CUSTOM_TAG) == SSW.CUSTOM_TAG then
                 badTemplate = badTemplate:sub(#SSW.CUSTOM_TAG + 1)
-            end
-            
-            -- Remove "Random" indicator and get actual message
-            if badTemplate:lower():find("random", 1, true) then
-                local candidates = {}
-                for _, v in ipairs(badList) do
-                    local raw = v
-                    if type(raw) == "string" and raw:sub(1, #SSW.CUSTOM_TAG) == SSW.CUSTOM_TAG then
-                        raw = raw:sub(#SSW.CUSTOM_TAG + 1)
-                    end
-                    if not raw:lower():find("random", 1, true) and raw:sub(1, #SSW.CUSTOM_TAG) ~= SSW.CUSTOM_TAG then
-                        table.insert(candidates, raw)
-                    end
-                end
-                if #candidates > 0 then
-                    badTemplate = candidates[1]
-                end
             end
             
             -- Apply placeholders (NO {name})
@@ -898,9 +881,6 @@ function SSW.ShowWhisperWindow(isTest)
         sendWin:Show()
         SSW.UI.SetSendUIEnabled(true)
         SSW.UI.UpdateAllPreviews()
-        if SSW.Access and SSW.Access.ApplyToSendWindow then
-            SSW.Access.ApplyToSendWindow(SSW.UI.sendWin)
-        end
         return
     end
 
@@ -908,9 +888,6 @@ function SSW.ShowWhisperWindow(isTest)
     sendWin:Show()
     SSW.UI.SetSendUIEnabled(true)
     SSW.UI.UpdateAllPreviews()
-    if SSW.Access and SSW.Access.ApplyToSendWindow then
-        SSW.Access.ApplyToSendWindow(SSW.UI.sendWin)
-    end
 end
 
 -- Store rows for Send.lua to access
