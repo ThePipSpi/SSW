@@ -1,0 +1,18 @@
+## Interface: 120001
+## Title: SoloShuffleWhisperer
+## Notes: Whisper teammates after Solo Shuffle matches
+## Author: YourName
+## Version: 2.0
+## SavedVariables: SSW_Config, SSW_AntiSpamState
+## SavedVariablesPerCharacter: SSW_CharConfig
+
+Core.lua
+Presets.lua
+AntiSpam.lua
+AutoGreet.lua
+Accessibility.lua
+MinimapButton.lua
+Snapshot.lua
+Triggers.lua
+UI.lua
+Send.lua
