@@ -36,6 +36,7 @@ local function PreviewLine(colorHex, label, text)
 end
 
 -- Main send function
+local ProcessWhispersInternal
 local function ProcessWhispers(isTest)
     if not SSW.UI or not SSW.UI.rows then
         SSW.Print("UI not ready.")
@@ -82,7 +83,7 @@ local function ProcessWhispers(isTest)
 end
 
 -- Internal send function (called after confirmation or if no BAD messages)
-local function ProcessWhispersInternal(isTest)
+ProcessWhispersInternal = function(isTest)
     queue = {}
     local rows = SSW.UI.rows
     local selected = 0
