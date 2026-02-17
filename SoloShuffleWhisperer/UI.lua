@@ -889,11 +889,11 @@ function SSW.ShowWhisperWindow(isTest)
 
     if SSW.IsTesting then
         local t = {
-            { fullName = "Shadowstrike-TarrenMill", classFile = "WARRIOR", specName = "Arms",  specID = 71,  role = "DAMAGER" },
-            { fullName = "Frostbite-Ravencrest",    classFile = "MAGE",    specName = "Frost", specID = 64,  role = "DAMAGER" },
-            { fullName = "Holyspark-Kazzak",  classFile = "PRIEST",  specName = "Disc",  specID = 256, role = "HEALER" },
-            { fullName = "Beastmaster-Silvermoon",  classFile = "HUNTER",  specName = "BM",    specID = 253, role = "DAMAGER" },
-            { fullName = "Lightbringer-Draenor", classFile = "PALADIN", specName = "Ret",   specID = 70,  role = "DAMAGER" },
+            { fullName = "Shadowstrike-TarrenMill",  classFile = "WARRIOR", specName = "Arms",  specID = 71,  role = "DAMAGER" },
+            { fullName = "Frostbite-Ravencrest",     classFile = "MAGE",    specName = "Frost", specID = 64,  role = "DAMAGER" },
+            { fullName = "Holyspark-Kazzak",         classFile = "PRIEST",  specName = "Disc",  specID = 256, role = "HEALER" },
+            { fullName = "Beastmaster-Silvermoon",   classFile = "HUNTER",  specName = "BM",    specID = 253, role = "DAMAGER" },
+            { fullName = "Lightbringer-Draenor",     classFile = "PALADIN", specName = "Ret",   specID = 70,  role = "DAMAGER" },
         }
         SSW.PartySnapshot = {
             takenAt = SSW.Now(),
