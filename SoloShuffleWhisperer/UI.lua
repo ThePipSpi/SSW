@@ -408,6 +408,11 @@ h4:SetPoint("LEFT", 400, 0)
 h4:SetText("BNet")
 h4:SetTextColor(1, 0.82, 0, 1)
 
+local h5 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+h5:SetPoint("LEFT", 460, 0)
+h5:SetText("Blame")
+h5:SetTextColor(1, 0.82, 0, 1)
+
 -- Rows
 local rows = {}
 for i = 1, SSW.MAX_ROWS do
@@ -549,6 +554,12 @@ for i = 1, SSW.MAX_ROWS do
     r.cbBnet:SetPoint("TOPLEFT", 388, -6)
     r.cbBnet:SetEnabled(false)
 
+    -- Checkbox "Blame"
+    r.cbBlame = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
+    r.cbBlame:SetSize(26, 26)
+    r.cbBlame:SetPoint("TOPLEFT", 448, -6)
+    r.cbBlame:SetEnabled(false)
+
     -- Dropdown per msg1 (seconda riga, più grande)
     r.msg1Index = 1
     r.dropdown = CreateFrame("Frame", "SSW_RowDD_" .. i, r, "UIDropDownMenuTemplate")
@@ -587,6 +598,7 @@ for i = 1, SSW.MAX_ROWS do
     function r:SetEnabledSubs(enabled)
         r.cbName:SetEnabled(enabled)
         r.cbBnet:SetEnabled(enabled)
+        r.cbBlame:SetEnabled(enabled)
         if enabled then
             r.dropdown:Show()
             local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
@@ -606,6 +618,7 @@ for i = 1, SSW.MAX_ROWS do
         if not checked then
             r.cbName:SetChecked(false)
             r.cbBnet:SetChecked(false)
+            r.cbBlame:SetChecked(false)
         end
         if SSW.UI.UpdateRowPreview then
             SSW.UI.UpdateRowPreview(r)
@@ -613,12 +626,31 @@ for i = 1, SSW.MAX_ROWS do
     end)
 
     r.cbName:SetScript("OnClick", function()
+        -- If Name is checked, uncheck Blame
+        if r.cbName:GetChecked() then
+            r.cbBlame:SetChecked(false)
+        end
         if SSW.UI.UpdateRowPreview then
             SSW.UI.UpdateRowPreview(r)
         end
     end)
 
     r.cbBnet:SetScript("OnClick", function()
+        -- If BNet is checked, uncheck Blame
+        if r.cbBnet:GetChecked() then
+            r.cbBlame:SetChecked(false)
+        end
+        if SSW.UI.UpdateRowPreview then
+            SSW.UI.UpdateRowPreview(r)
+        end
+    end)
+
+    r.cbBlame:SetScript("OnClick", function()
+        -- If Blame is checked, uncheck Name and BNet
+        if r.cbBlame:GetChecked() then
+            r.cbName:SetChecked(false)
+            r.cbBnet:SetChecked(false)
+        end
         if SSW.UI.UpdateRowPreview then
             SSW.UI.UpdateRowPreview(r)
         end
@@ -712,8 +744,10 @@ function SSW.UI.SetSendUIEnabled(enabled)
             local subsEnabled = enabled and r.cbMain:GetChecked()
             r.cbName:SetEnabled(subsEnabled)
             r.cbBnet:SetEnabled(subsEnabled)
+            r.cbBlame:SetEnabled(subsEnabled)
             r.cbName:SetAlpha(subsEnabled and 1 or 0.25)
             r.cbBnet:SetAlpha(subsEnabled and 1 or 0.25)
+            r.cbBlame:SetAlpha(subsEnabled and 1 or 0.25)
         end
     end
 end
@@ -770,6 +804,15 @@ function SSW.UI.UpdateRowPreview(r)
     -- No preview if row not selected
     if not r.cbMain:GetChecked() then
         if r.preview then r.preview:SetText("") end
+        return
+    end
+
+    -- Check if Blame checkbox is checked
+    if r.cbBlame:GetChecked() then
+        -- Show "..." and indicate ignore list
+        if r.preview then
+            r.preview:SetText("Preview: ... (player will be added to ignore list)")
+        end
         return
     end
 

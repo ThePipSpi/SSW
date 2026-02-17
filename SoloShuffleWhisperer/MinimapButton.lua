@@ -56,18 +56,18 @@ local function CreateButton()
     btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     btn:RegisterForDrag("LeftButton")
 
-    -- Circular border (larger, more visible like PvP Assist)
-    btn.border = btn:CreateTexture(nil, "OVERLAY")
-    btn.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
-    btn.border:SetSize(54, 54)
-    btn.border:SetPoint("TOPLEFT")
-
-    -- Icon positioned outside and above the circular border
-    btn.icon = btn:CreateTexture(nil, "ARTWORK")
+    -- Icon texture (rendered behind border, so it appears inside)
+    btn.icon = btn:CreateTexture(nil, "BACKGROUND")
     btn.icon:SetTexture(ICON_TEX)
     btn.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    btn.icon:SetPoint("CENTER", 0, -2)  -- Moved up slightly from center
-    btn.icon:SetSize(24, 24)  -- Slightly larger since it's not masked
+    btn.icon:SetPoint("CENTER", 0, 1)
+    btn.icon:SetSize(20, 20)
+
+    -- Circular border (overlay to mask icon edges)
+    btn.border = btn:CreateTexture(nil, "OVERLAY")
+    btn.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    btn.border:SetSize(53, 53)
+    btn.border:SetPoint("TOPLEFT")
 
     btn:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 

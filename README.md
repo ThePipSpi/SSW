@@ -35,6 +35,7 @@ A World of Warcraft addon for The War Within (11.0+) that helps you send friendl
   - One-Tap mode for quick "thanks all" with a single button
   - Visual countdown before sending
   - Auto-greeting when joining groups (optional)
+  - Blame checkbox for quick dismissal of toxic players (sends "..." and adds to ignore list)
 - **Anti-Spam Protection**: Prevents duplicate messages and respects cooldowns
 - **Minimap Button**: Easy access with left-click (open), right-click (settings), Shift+click (toggle mode)
 - **Custom Message Lines**: Add up to 10 custom messages that persist across sessions
@@ -65,6 +66,18 @@ After installation, you should see:
 - `/ssw show` - Open the whisper window manually
 - `/ssw test` - Test mode with dummy party data
 - `/ssw arm` - Toggle between SAFE and LIVE modes
+
+### Whisper Window Interface
+
+The whisper window allows you to select which players to message and how:
+
+- **Send**: Check to send a whisper to this player
+- **Name**: Include the player's name in the message using {name} placeholder
+- **BNet**: Send a second message with your Battle.net tag invitation
+- **Blame**: Send "..." to the player and add them to your ignore list
+  - When Blame is checked, Name and BNet are automatically unchecked
+  - When Name or BNet is checked, Blame is automatically unchecked
+  - This is useful for quickly dismissing toxic players
 
 ### Minimap Button
 - **Left Click**: Open whisper window

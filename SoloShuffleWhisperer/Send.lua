@@ -75,8 +75,12 @@ local function ProcessWhispers(isTest)
             if not r.playerName or r.playerName == "" then
                 SSW.Print("Row " .. i .. " selected but has no target name.")
             else
-                local msg1, msg2, clean, target = BuildMessagesForRow(r)
                 local classColor = r.text:GetText() and (r.text:GetText():match("|cff(%x+)") or "ffffff") or "ffffff"
+                local clean = SSW.CleanName(r.playerName)
+                local target = r.playerName
+
+                -- Check if Blame checkbox is checked
+                local isBlame = r.cbBlame:GetChecked()
 
                 -- Check anti-spam for this target
                 local canSend = true
@@ -89,22 +93,36 @@ local function ProcessWhispers(isTest)
                 end
 
                 if canSend then
-                    if isTest then
-                        PreviewLine(classColor, "[TEST -> " .. clean .. "]", msg1)
-                        if r.cbBnet:GetChecked() and msg2 ~= "" then
-                            PreviewLine(classColor, "[TEST -> " .. clean .. " - 2nd]", msg2)
+                    if isBlame then
+                        -- Blame mode: send "..." and add to ignore list
+                        if isTest then
+                            PreviewLine(classColor, "[TEST -> " .. clean .. " - BLAME]", "... (will be ignored)")
+                        elseif SSW.IsArmed() then
+                            table.insert(queue, { target = target, text = "...", addToIgnore = true })
+                        else
+                            PreviewLine(classColor, "[SAFE -> " .. clean .. " - BLAME]", "... (will be ignored)")
                         end
-
-                    elseif SSW.IsArmed() then
-                        Enqueue(target, msg1)
-                        if r.cbBnet:GetChecked() and msg2 ~= "" then
-                            Enqueue(target, msg2)
-                        end
-
                     else
-                        PreviewLine(classColor, "[SAFE -> " .. clean .. "]", msg1)
-                        if r.cbBnet:GetChecked() and msg2 ~= "" then
-                            PreviewLine(classColor, "[SAFE -> " .. clean .. " - 2nd]", msg2)
+                        -- Normal mode
+                        local msg1, msg2 = BuildMessagesForRow(r)
+                        
+                        if isTest then
+                            PreviewLine(classColor, "[TEST -> " .. clean .. "]", msg1)
+                            if r.cbBnet:GetChecked() and msg2 ~= "" then
+                                PreviewLine(classColor, "[TEST -> " .. clean .. " - 2nd]", msg2)
+                            end
+
+                        elseif SSW.IsArmed() then
+                            Enqueue(target, msg1)
+                            if r.cbBnet:GetChecked() and msg2 ~= "" then
+                                Enqueue(target, msg2)
+                            end
+
+                        else
+                            PreviewLine(classColor, "[SAFE -> " .. clean .. "]", msg1)
+                            if r.cbBnet:GetChecked() and msg2 ~= "" then
+                                PreviewLine(classColor, "[SAFE -> " .. clean .. " - 2nd]", msg2)
+                            end
                         end
                     end
 
@@ -162,6 +180,16 @@ local function ProcessWhispers(isTest)
             end
 
             SendChatMessage(item.text, "WHISPER", nil, item.target)
+            
+            -- Add to ignore list if requested
+            if item.addToIgnore then
+                local success = pcall(function()
+                    C_FriendList.AddIgnore(item.target)
+                end)
+                if not success then
+                    SSW.Print("Could not add " .. item.target .. " to ignore list (may be full or invalid name)")
+                end
+            end
             
             -- Increment session stats
             if SSW.IncrementSentCount then
