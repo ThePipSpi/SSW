@@ -180,6 +180,151 @@ local function ProcessWhispers(isTest)
     end)
 end
 
+-- Send whispers immediately with no delay and add players to ignore list
+-- Used by "Ty All" and "Blame All" buttons
+-- messageTemplate can be:
+--   - A string template (for "Blame All" with "...")
+--   - "RANDOM" to send random non-custom messages (for "Ty All")
+function SSW.SendImmediatelyWithIgnore(messageTemplate, skipAntiSpam)
+    if not SSW.UI or not SSW.UI.rows then
+        SSW.Print("UI not ready.")
+        return
+    end
+
+    local rows = SSW.UI.rows
+    local queue = {}
+    local selected = 0
+
+    -- Check anti-spam unless explicitly skipped
+    if not skipAntiSpam and SSW.IsArmed() then
+        local ok, reason = SSW.AntiSpam.CanStartBurst()
+        if not ok then
+            SSW.Print("Anti-spam: " .. tostring(reason))
+            return
+        end
+    end
+
+    -- Build queue from visible rows
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r and r:IsShown() and r.playerName and r.playerName ~= "" then
+            local clean = SSW.CleanName(r.playerName)
+            local target = r.playerName
+            
+            -- Check anti-spam for this target unless explicitly skipped
+            local canSend = true
+            if not skipAntiSpam and SSW.IsArmed() then
+                local ok, reason = SSW.AntiSpam.CanWhisperTarget(target)
+                if not ok then
+                    SSW.Print("Skipping " .. clean .. ": " .. tostring(reason))
+                    canSend = false
+                end
+            end
+
+            if canSend then
+                local finalMessage = messageTemplate
+                
+                -- If RANDOM, select a random non-custom preset for each player
+                if messageTemplate == "RANDOM" then
+                    local presetIndices = {}
+                    for idx = 1, #SSW.MSG1_PRESETS do
+                        local preset = SSW.MSG1_PRESETS[idx]
+                        if type(preset) == "string" and preset ~= "Random" then
+                            table.insert(presetIndices, idx)
+                        end
+                    end
+                    
+                    local selectedIdx = 1
+                    if #presetIndices > 0 then
+                        selectedIdx = presetIndices[math.random(1, #presetIndices)]
+                    end
+                    
+                    -- Get the template
+                    local template = SSW.MSG1_PRESETS[selectedIdx] or "gg {name}"
+                    
+                    -- Build meta data for the message
+                    local meta = {
+                        role = r.role or "NONE",
+                        specID = r.specID or 0,
+                        msg1Index = selectedIdx,
+                    }
+                    
+                    -- Use BuildMessagesForTarget to fill in placeholders
+                    finalMessage, _ = SSW.BuildMessagesForTarget(r.playerName, true, false, meta)
+                else
+                    -- For non-random (like "..."), use the message as-is
+                    finalMessage = messageTemplate
+                end
+                
+                table.insert(queue, { target = target, text = finalMessage })
+                selected = selected + 1
+            end
+        end
+    end
+
+    if selected == 0 then
+        SSW.Print("No players available.")
+        return
+    end
+
+    -- Close window
+    if SSW.UI.sendWin then
+        SSW.UI.sendWin:Hide()
+    end
+
+    -- Send immediately if armed
+    if SSW.IsArmed() then
+        -- Mark burst start for anti-spam
+        if not skipAntiSpam and SSW.AntiSpam.MarkBurstStart then
+            SSW.AntiSpam.MarkBurstStart()
+        end
+
+        SSW.Print("Sending " .. #queue .. " whisper(s) immediately...")
+
+        local idx = 0
+        local function SendNext()
+            idx = idx + 1
+            local item = queue[idx]
+            if not item then
+                SSW.Print("Done sending whispers.")
+                return
+            end
+
+            -- Mark for anti-spam
+            if not skipAntiSpam and SSW.AntiSpam.MarkWhisper then
+                SSW.AntiSpam.MarkWhisper(item.target)
+            end
+
+            -- Send whisper
+            SendChatMessage(item.text, "WHISPER", nil, item.target)
+            
+            -- Increment session stats
+            if SSW.IncrementSentCount then
+                SSW.IncrementSentCount()
+            end
+
+            -- Add to ignore list
+            C_FriendList.AddIgnore(item.target)
+
+            -- Schedule next
+            if idx < #queue then
+                C_Timer.After(SSW.SEND_DELAY, SendNext)
+            else
+                SSW.Print("Done sending whispers. All players added to ignore list.")
+            end
+        end
+
+        SendNext()
+    else
+        -- Safe mode preview
+        SSW.Print("SAFE MODE: Would send to " .. selected .. " player(s) and add to ignore list.")
+        for _, item in ipairs(queue) do
+            local clean = SSW.CleanName(item.target)
+            SSW.Print("[SAFE -> " .. clean .. "] " .. item.text)
+        end
+    end
+end
+
 -- Hook up send button
 if SSW.UI and SSW.UI.btnSend then
     SSW.UI.btnSend:SetScript("OnClick", function()

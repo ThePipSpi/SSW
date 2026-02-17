@@ -661,9 +661,14 @@ btnSend:SetText("Send Whispers")
 btnSend:SetNormalFontObject("GameFontNormalLarge")
 
 local btnThankAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnThankAll:SetSize(140, 36)
+btnThankAll:SetSize(100, 36)
 btnThankAll:SetPoint("LEFT", btnSend, "RIGHT", 8, 0)
-btnThankAll:SetText("Thank All")
+btnThankAll:SetText("Ty All")
+
+local btnBlameAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
+btnBlameAll:SetSize(100, 36)
+btnBlameAll:SetPoint("LEFT", btnThankAll, "RIGHT", 8, 0)
+btnBlameAll:SetText("Blame All")
 
 local btnSettings = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnSettings:SetSize(120, 36)
@@ -690,11 +695,13 @@ function SSW.UI.SetSendUIEnabled(enabled)
     btnAll:SetEnabled(enabled)
     btnNone:SetEnabled(enabled)
     btnThankAll:SetEnabled(enabled)
+    btnBlameAll:SetEnabled(enabled)
     btnClose:SetEnabled(enabled)
     btnSend:SetAlpha(enabled and 1 or 0.35)
     btnAll:SetAlpha(enabled and 1 or 0.35)
     btnNone:SetAlpha(enabled and 1 or 0.35)
     btnThankAll:SetAlpha(enabled and 1 or 0.35)
+    btnBlameAll:SetAlpha(enabled and 1 or 0.35)
     btnClose:SetAlpha(enabled and 1 or 0.35)
 
     for i = 1, SSW.MAX_ROWS do
@@ -735,39 +742,19 @@ btnNone:SetScript("OnClick", function()
     end
 end)
 
--- Thank all button handler
+-- Ty all button handler - sends random whispers immediately and adds to ignore list
 btnThankAll:SetScript("OnClick", function()
-    -- Randomly select one of the MSG1_PRESETS (excluding "Random" and custom messages)
-    -- Build list of preset indices in the combined list
-    local combinedList = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
-    local presetIndices = {}
-    
-    -- Only include indices that correspond to non-Random MSG1_PRESETS
-    for idx = 1, #SSW.MSG1_PRESETS do
-        local preset = SSW.MSG1_PRESETS[idx]
-        if type(preset) == "string" and preset ~= "Random" then
-            table.insert(presetIndices, idx)
-        end
+    -- Send random messages (different for each player) immediately with ignore
+    if SSW.SendImmediatelyWithIgnore then
+        SSW.SendImmediatelyWithIgnore("RANDOM", false)
     end
-    
-    local selectedIdx = 1
-    if #presetIndices > 0 then
-        selectedIdx = presetIndices[math.random(1, #presetIndices)]
-    end
-    
-    -- Select all visible rows and set their message to the randomly selected preset
-    for i = 1, SSW.MAX_ROWS do
-        local r = rows[i]
-        if r:IsShown() then
-            r.cbMain:SetChecked(true)
-            r:SetEnabledSubs(true)
-            r.msg1Index = selectedIdx
-            UIDropDownMenu_SetSelectedID(r.dropdown, selectedIdx)
-            if selectedIdx >= 1 and selectedIdx <= #combinedList then
-                UIDropDownMenu_SetText(r.dropdown, combinedList[selectedIdx])
-            end
-            if SSW.UI.UpdateRowPreview then SSW.UI.UpdateRowPreview(r) end
-        end
+end)
+
+-- Blame all button handler - sends "..." to all players immediately and adds to ignore list
+btnBlameAll:SetScript("OnClick", function()
+    -- Send "..." to all players immediately with ignore
+    if SSW.SendImmediatelyWithIgnore then
+        SSW.SendImmediatelyWithIgnore("...", false)
     end
 end)
 
