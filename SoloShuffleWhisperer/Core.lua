@@ -37,6 +37,33 @@ function SSW.CleanName(fullName)
     return (tostring(fullName):gsub("%-.+", ""))
 end
 
+function SSW.GetRealm(fullName)
+    if not fullName then return "" end
+    local realm = tostring(fullName):match("%-(.+)")
+    return realm or ""
+end
+
+function SSW.GetCheckPvpUrl(fullName)
+    if not fullName or fullName == "" then return "" end
+    local name = SSW.CleanName(fullName)
+    local realm = SSW.GetRealm(fullName)
+    
+    -- If no realm in fullName, try to get current realm
+    if realm == "" then
+        realm = GetRealmName and GetRealmName() or ""
+    end
+    
+    -- Convert realm name to URL-friendly format (lowercase, spaces to hyphens)
+    -- Note: This assumes check-pvp.fr uses lowercase realm/name format with hyphens for spaces.
+    -- If the site changes URL format or requires percent-encoding for special characters,
+    -- this function may need to be updated.
+    realm = realm:lower():gsub("%s+", "-")
+    name = name:lower()
+    
+    -- Default to EU region. Change "eu" to "us", "kr", "tw", etc. for other regions
+    return ("https://check-pvp.fr/eu/%s/%s"):format(realm, name)
+end
+
 function SSW.GetMyBattleTag()
     local success, _, btag = pcall(function() 
         if BNGetInfo then
