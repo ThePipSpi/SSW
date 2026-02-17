@@ -194,28 +194,9 @@ local hint2 = section2:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 hint2:SetPoint("TOPLEFT", lbl2, "BOTTOMLEFT", 0, -2)
 hint2:SetText("Optional second message with BattleTag info")
 
--- Sezione Delay
-local section3 = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-section3:SetPoint("TOPLEFT", 12, yBehav - 208)
-section3:SetPoint("TOPRIGHT", -12, yBehav - 208)
-section3:SetHeight(50)
-section3:SetBackdrop({
-    bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 16,
-    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-})
-section3:SetBackdropColor(0.05, 0.05, 0.05, 0.5)
-section3:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-
-local lblDelay = section3:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-lblDelay:SetPoint("TOPLEFT", 10, -8)
-lblDelay:SetText("LIVE Mode: Delay before sending (seconds)")
-lblDelay:SetTextColor(1, 0.82, 0, 1)
-
 -- Checkboxes
 local cbAutoGreet = CreateFrame("CheckButton", nil, scrollChild, "ChatConfigCheckButtonTemplate")
-cbAutoGreet:SetPoint("TOPLEFT", 18, yBehav - 275)
+cbAutoGreet:SetPoint("TOPLEFT", 18, yBehav - 208)
 cbAutoGreet.Text:ClearAllPoints()
 cbAutoGreet.Text:SetPoint("LEFT", cbAutoGreet, "RIGHT", 6, 1)
 cbAutoGreet.Text:SetWidth(370)
@@ -254,6 +235,8 @@ cbBadMode:SetScript("OnClick", function(self)
                 end
             end
         end
+        -- Hide custom BAD message boxes
+        UpdateBadCustomBoxesVisibility()
     end
 end)
 
@@ -264,6 +247,71 @@ badModeWarning:SetWidth(370)
 badModeWarning:SetJustifyH("LEFT")
 badModeWarning:SetText("|cFFFF8800WARNING:|r May result in reports. Use responsibly.")
 badModeWarning:SetTextColor(1, 0.5, 0, 1)
+
+-- ── Section: Custom BAD Lines (only visible when BAD MODE enabled) ──
+local yBadCustom = AddSectionHeader(scrollChild, "CUSTOM BAD MESSAGE LINES  (excluded from Random)", -10)
+yBadCustom = yBehav - 265  -- Position below warning (adjusted since delay section removed)
+
+local badCustLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+badCustLabel:SetPoint("TOPLEFT", 18, yBadCustom)
+badCustLabel:SetWidth(400)
+badCustLabel:SetJustifyH("LEFT")
+badCustLabel:SetText("Write your own BAD messages below (only visible when BAD MODE enabled).\nPlaceholders: {role}, {spec}")
+
+local customBadBoxes = {}
+local customBadNumLabels = {}
+for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
+    local boxY = yBadCustom - 32 - ((ci - 1) * (CUSTOM_BOX_H + CUSTOM_GAP))
+    local numLbl = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    numLbl:SetPoint("TOPLEFT", 18, boxY - 3)
+    numLbl:SetText(tostring(ci) .. ".")
+    
+    local box = CreateFrame("EditBox", "SSW_CustomBadBox" .. ci, scrollChild, "InputBoxTemplate")
+    box:SetSize(360, CUSTOM_BOX_H)
+    box:SetPoint("TOPLEFT", 36, boxY)
+    box:SetAutoFocus(false)
+    box:SetMaxLetters(140)
+    box.idx = ci
+    box:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    box:SetScript("OnEditFocusLost", function(self)
+        if not SSW_Config then return end
+        SSW_Config.customBadLines = SSW_Config.customBadLines or {}
+        local val = strtrim(self:GetText())
+        SSW_Config.customBadLines[self.idx] = (val ~= "") and val or nil
+        -- Rebuild row message dropdowns with updated custom bad lines
+        SSW.UI.RebuildRowMessageDropdowns()
+    end)
+    
+    customBadBoxes[ci] = box
+    customBadNumLabels[ci] = numLbl
+    
+    -- Hide by default (only show when BAD MODE enabled)
+    numLbl:Hide()
+    box:Hide()
+end
+
+-- Store references for showing/hiding
+scrollChild.customBadBoxes = customBadBoxes
+scrollChild.customBadNumLabels = customBadNumLabels
+scrollChild.badCustLabel = badCustLabel
+scrollChild.yBadCustomAfter = yBadCustom - 32 - (SSW.MAX_CUSTOM_BAD_LINES * (CUSTOM_BOX_H + CUSTOM_GAP))
+
+-- Helper function to show/hide custom BAD boxes
+local function UpdateBadCustomBoxesVisibility()
+    local enabled = SSW_Config and SSW_Config.badModeEnabled
+    badCustLabel:SetShown(enabled)
+    for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
+        local box = customBadBoxes[ci]
+        local numLbl = customBadNumLabels[ci]
+        if box then
+            box:SetShown(enabled)
+        end
+        if numLbl then
+            numLbl:SetShown(enabled)
+        end
+    end
+end
 
 -- BAD MODE confirmation dialog
 if not StaticPopupDialogs["SSW_BAD_MODE_WARNING"] then
@@ -283,6 +331,8 @@ if not StaticPopupDialogs["SSW_BAD_MODE_WARNING"] then
                     end
                 end
             end
+            -- Show custom BAD message boxes
+            UpdateBadCustomBoxesVisibility()
         end,
         OnCancel = function()
             cbBadMode:SetChecked(false)
@@ -345,20 +395,15 @@ local dd2 = MakeDropdown(scrollChild, "SSW_DD2", 360, SSW.MSG2_PRESETS, function
 end)
 dd2:SetPoint("TOPLEFT", section2, "TOPLEFT", -2, -32)
 
-local delayBox = CreateFrame("EditBox", "SSW_DelayBox", scrollChild, "InputBoxTemplate")
-delayBox:SetSize(80, 30)
-delayBox:SetPoint("TOPLEFT", section3, "TOPLEFT", 10, -24)
-delayBox:SetAutoFocus(false)
-delayBox:SetScript("OnEnterPressed", function(self)
-    self:ClearFocus()
-    local v = tonumber(self:GetText())
-    if not v then v = SSW.DEFAULT_PRE_SEND_DELAY end
-    SSW_Config.preSendDelay = math.max(0, v)
-end)
-
--- Set scroll child height to fit all content
-local totalHeight = math.abs(yBehav - 275) + 80  -- Calculate total content height
-scrollChild:SetHeight(totalHeight)
+-- Calculate scroll child height dynamically
+-- Base height is from top to just after behavior section
+local baseHeight = math.abs(yBehav - 210) + 80
+-- If BAD MODE is enabled, add height for custom BAD boxes
+if SSW_Config and SSW_Config.badModeEnabled and scrollChild.yBadCustomAfter then
+    local badSectionHeight = math.abs(scrollChild.yBadCustomAfter - yBehav + 210)
+    baseHeight = baseHeight + badSectionHeight + 50  -- Extra padding
+end
+scrollChild:SetHeight(baseHeight)
 
 configWin:SetScript("OnShow", function()
     cbAutoGreet:SetChecked(SSW_Config and SSW_Config.autoGreetEnabled)
@@ -375,8 +420,6 @@ configWin:SetScript("OnShow", function()
     UIDropDownMenu_SetText(dd1, msg1List[i1])
     UIDropDownMenu_SetSelectedID(dd2, i2)
     UIDropDownMenu_SetText(dd2, SSW.MSG2_PRESETS[i2])
-
-    delayBox:SetText(tostring(SSW_Config.preSendDelay or SSW.DEFAULT_PRE_SEND_DELAY))
     
     -- Populate custom line edit boxes
     for ci = 1, SSW.MAX_CUSTOM_LINES do
@@ -386,6 +429,18 @@ configWin:SetScript("OnShow", function()
             box:SetText(val)
         end
     end
+    
+    -- Populate custom BAD line edit boxes
+    for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
+        local box = customBadBoxes[ci]
+        if box then
+            local val = (SSW_Config and SSW_Config.customBadLines and SSW_Config.customBadLines[ci]) or ""
+            box:SetText(val)
+        end
+    end
+    
+    -- Show/hide custom BAD boxes based on BAD MODE
+    UpdateBadCustomBoxesVisibility()
     
     -- Rebuild row message dropdowns with latest custom lines
     SSW.UI.RebuildRowMessageDropdowns()
@@ -465,28 +520,13 @@ h1:SetTextColor(1, 0.82, 0, 1)
 
 local h2 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h2:SetPoint("LEFT", 268, 0)
-h2:SetText("Send")
+h2:SetText("BNet")
 h2:SetTextColor(1, 0.82, 0, 1)
 
 local h3 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h3:SetPoint("LEFT", 328, 0)
-h3:SetText("Name")
+h3:SetText("Ignore")
 h3:SetTextColor(1, 0.82, 0, 1)
-
-local h4 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-h4:SetPoint("LEFT", 388, 0)
-h4:SetText("BNet")
-h4:SetTextColor(1, 0.82, 0, 1)
-
-local h5 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-h5:SetPoint("LEFT", 448, 0)
-h5:SetText("Bad")
-h5:SetTextColor(1, 0.82, 0, 1)
-
-local h6 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-h6:SetPoint("LEFT", 508, 0)
-h6:SetText("Blame")
-h6:SetTextColor(1, 0.82, 0, 1)
 
 -- Rows
 local rows = {}
@@ -612,45 +652,69 @@ for i = 1, SSW.MAX_ROWS do
     
     r.pvpBtn:Hide() -- Hidden by default, shown when player is set
 
-    -- Checkbox "Send" (allineata)
+    -- Checkbox "Send" - REMOVED (not needed, selecting from dropdown implies sending)
     r.cbMain = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbMain:SetSize(26, 26)
     r.cbMain:SetPoint("TOPLEFT", 268, -6)
+    r.cbMain:SetEnabled(false)
+    r.cbMain:Hide()  -- Always hidden now
 
-    -- Checkbox "Use {name}"
+    -- Checkbox "Use {name}" - HIDDEN per requisito precedente
     r.cbName = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbName:SetSize(26, 26)
-    r.cbName:SetPoint("TOPLEFT", 328, -6)
+    r.cbName:SetPoint("TOPLEFT", 268, -6)
     r.cbName:SetEnabled(false)
+    r.cbName:Hide()  -- Always hidden now
 
     -- Checkbox "+ BNet"
     r.cbBnet = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBnet:SetSize(26, 26)
-    r.cbBnet:SetPoint("TOPLEFT", 388, -6)
-    r.cbBnet:SetEnabled(false)
+    r.cbBnet:SetPoint("TOPLEFT", 268, -6)
+    r.cbBnet:SetEnabled(true)
 
-    -- Checkbox "Bad" (BAD MODE - negative messages)
+    -- Checkbox "Bad" - REMOVED (use dropdown instead)
     r.cbBad = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBad:SetSize(26, 26)
-    r.cbBad:SetPoint("TOPLEFT", 448, -6)
+    r.cbBad:SetPoint("TOPLEFT", 328, -6)
     r.cbBad:SetEnabled(false)
+    r.cbBad:Hide()  -- Always hidden now - use dropdown instead
+    
+    -- Checkbox "Ignore" (ignore player after sending message)
+    r.cbIgnore = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
+    r.cbIgnore:SetSize(26, 26)
+    r.cbIgnore:SetPoint("TOPLEFT", 328, -6)
+    r.cbIgnore:SetEnabled(true)
     if not SSW.IsBadModeEnabled or not SSW.IsBadModeEnabled() then
-        r.cbBad:Hide()
+        r.cbIgnore:Hide()  -- Only show if BAD MODE enabled
     end
+    
+    -- Add tooltip for ignore checkbox
+    r.cbIgnore:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Ignore player after sending message", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    r.cbIgnore:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
 
-    -- Checkbox "Blame" (sends "..." and ignores)
+    -- Checkbox "Blame" - REMOVED (use BAD dropdown with ignore checkbox instead)
     r.cbBlame = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBlame:SetSize(26, 26)
-    r.cbBlame:SetPoint("TOPLEFT", 508, -6)
+    r.cbBlame:SetPoint("TOPLEFT", 388, -6)
     r.cbBlame:SetEnabled(false)
+    r.cbBlame:Hide()  -- Always hidden now
+    
+    -- Keep old cbIgnoreOnBad reference for compatibility
+    r.cbIgnoreOnBad = r.cbIgnore
 
-    -- Dropdown per msg1 (seconda riga, più grande)
+    -- Dropdown per msg1 (GOOD messages)
     r.msg1Index = 1
     r.dropdown = CreateFrame("Frame", "SSW_RowDD_" .. i, r, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(r.dropdown, 280)
     r.dropdown:SetPoint("TOPLEFT", 0, -30)
     r.dropdown:SetScale(0.9)
-    UIDropDownMenu_SetText(r.dropdown, "Select message...")
+    UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
     r.dropdown:Hide()
 
     UIDropDownMenu_Initialize(r.dropdown, function(self, level)
@@ -664,6 +728,11 @@ for i = 1, SSW.MAX_ROWS do
                 r.msg1Index = idx
                 UIDropDownMenu_SetSelectedID(r.dropdown, idx)
                 UIDropDownMenu_SetText(r.dropdown, txt)
+                -- Reset BAD dropdown selection when GOOD is chosen
+                r.badMsgIndex = nil
+                if r.badDropdown then
+                    UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
+                end
                 CloseDropDownMenus()
                 if SSW.UI.UpdateRowPreview then
                     SSW.UI.UpdateRowPreview(r)
@@ -673,18 +742,18 @@ for i = 1, SSW.MAX_ROWS do
         end
     end)
 
-    -- BAD MODE dropdown (only visible when BAD MODE enabled and cbBad checked)
-    r.badMsgIndex = 1
+    -- BAD MODE dropdown (shown to the right of GOOD dropdown when BAD MODE enabled)
+    r.badMsgIndex = nil
     r.badDropdown = CreateFrame("Frame", "SSW_RowBadDD_" .. i, r, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(r.badDropdown, 280)
-    r.badDropdown:SetPoint("TOPLEFT", 0, -30)
+    r.badDropdown:SetPoint("TOPLEFT", 290, -30)  -- Position to the right of GOOD dropdown
     r.badDropdown:SetScale(0.9)
-    UIDropDownMenu_SetText(r.badDropdown, "Select bad message...")
+    UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
     r.badDropdown:Hide()
 
     UIDropDownMenu_Initialize(r.badDropdown, function(self, level)
         local selectedIdx = r.badMsgIndex or 1
-        local badList = SSW.GetBadModePresets and SSW.GetBadModePresets() or {}
+        local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
         for idx, txt in ipairs(badList) do
             local info = UIDropDownMenu_CreateInfo()
             info.text = txt
@@ -693,6 +762,9 @@ for i = 1, SSW.MAX_ROWS do
                 r.badMsgIndex = idx
                 UIDropDownMenu_SetSelectedID(r.badDropdown, idx)
                 UIDropDownMenu_SetText(r.badDropdown, txt)
+                -- Reset GOOD dropdown selection when BAD is chosen
+                r.msg1Index = nil
+                UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
                 CloseDropDownMenus()
                 if SSW.UI.UpdateRowPreview then
                     SSW.UI.UpdateRowPreview(r)
@@ -709,117 +781,60 @@ for i = 1, SSW.MAX_ROWS do
     r.preview:SetJustifyH("LEFT")
 
     function r:SetEnabledSubs(enabled)
-        r.cbName:SetEnabled(enabled)
-        r.cbBnet:SetEnabled(enabled)
-        if SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
-            r.cbBad:SetEnabled(enabled)
-        end
-        r.cbBlame:SetEnabled(enabled)
-        if enabled then
-            r.dropdown:Show()
+        -- This function is now deprecated since dropdowns are always shown
+        -- Kept for compatibility but does nothing
+    end
+    
+    -- Show dropdowns when row is shown
+    function r:ShowDropdowns()
+        -- Show GOOD dropdown (always)
+        r.dropdown:Show()
+        if not r.msg1Index then
+            UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
+        else
             local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
-            UIDropDownMenu_SetSelectedID(r.dropdown, r.msg1Index or 1)
             local idx = r.msg1Index or 1
             if idx >= 1 and idx <= #msg1List then
+                UIDropDownMenu_SetSelectedID(r.dropdown, idx)
                 UIDropDownMenu_SetText(r.dropdown, msg1List[idx])
             end
-            
-            -- Show/hide BAD dropdown based on cbBad state
-            if r.cbBad and r.cbBad:GetChecked() and r.badDropdown then
-                r.badDropdown:Show()
-            elseif r.badDropdown then
-                r.badDropdown:Hide()
-            end
-        else
-            r.dropdown:Hide()
-            if r.badDropdown then
-                r.badDropdown:Hide()
-            end
         end
-    end
-
-    r.cbMain:SetScript("OnClick", function(self)
-        local checked = self:GetChecked()
-        r:SetEnabledSubs(checked)
-        if not checked then
-            r.cbName:SetChecked(false)
-            r.cbBnet:SetChecked(false)
-            if r.cbBad then r.cbBad:SetChecked(false) end
-            r.cbBlame:SetChecked(false)
-        end
-        if SSW.UI.UpdateRowPreview then
-            SSW.UI.UpdateRowPreview(r)
-        end
-    end)
-
-    r.cbName:SetScript("OnClick", function()
-        -- If Name is checked, uncheck Bad and Blame (good will mode)
-        if r.cbName:GetChecked() then
-            if r.cbBad then r.cbBad:SetChecked(false) end
-            r.cbBlame:SetChecked(false)
-            if r.badDropdown then r.badDropdown:Hide() end
-            r.dropdown:Show()
-        end
-        if SSW.UI.UpdateRowPreview then
-            SSW.UI.UpdateRowPreview(r)
-        end
-    end)
-
-    r.cbBnet:SetScript("OnClick", function()
-        -- If BNet is checked, uncheck Bad and Blame (good will mode)
-        if r.cbBnet:GetChecked() then
-            if r.cbBad then r.cbBad:SetChecked(false) end
-            r.cbBlame:SetChecked(false)
-            if r.badDropdown then r.badDropdown:Hide() end
-            r.dropdown:Show()
-        end
-        if SSW.UI.UpdateRowPreview then
-            SSW.UI.UpdateRowPreview(r)
-        end
-    end)
-
-    -- BAD MODE checkbox (negative messages)
-    if r.cbBad then
-        r.cbBad:SetScript("OnClick", function()
-            if r.cbBad:GetChecked() then
-                -- If Bad is checked, uncheck Name, BNet, and Blame
-                r.cbName:SetChecked(false)
-                r.cbBnet:SetChecked(false)
-                r.cbBlame:SetChecked(false)
-                -- Show BAD dropdown, hide good dropdown
-                r.dropdown:Hide()
-                if r.badDropdown then
-                    r.badDropdown:Show()
-                    -- Select first bad message if not already set
-                    if not r.badMsgIndex or r.badMsgIndex < 1 then
-                        r.badMsgIndex = 1
-                    end
-                    local badList = SSW.GetBadModePresets()
-                    if #badList > 0 then
-                        UIDropDownMenu_SetSelectedID(r.badDropdown, r.badMsgIndex)
-                        UIDropDownMenu_SetText(r.badDropdown, badList[r.badMsgIndex] or "...")
-                    end
-                end
+        
+        -- Show BAD dropdown if BAD MODE is enabled
+        if SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() and r.badDropdown then
+            r.badDropdown:Show()
+            if not r.badMsgIndex then
+                UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
             else
-                -- If Bad is unchecked, hide BAD dropdown and show normal dropdown
-                if r.badDropdown then r.badDropdown:Hide() end
-                r.dropdown:Show()
+                local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
+                local idx = r.badMsgIndex or 1
+                if idx >= 1 and idx <= #badList then
+                    UIDropDownMenu_SetSelectedID(r.badDropdown, idx)
+                    UIDropDownMenu_SetText(r.badDropdown, badList[idx])
+                end
             end
-            if SSW.UI.UpdateRowPreview then
-                SSW.UI.UpdateRowPreview(r)
-            end
-        end)
+        end
     end
 
-    r.cbBlame:SetScript("OnClick", function()
-        -- If Blame is checked, uncheck Name, BNet, and Bad (ignore mode)
-        if r.cbBlame:GetChecked() then
-            r.cbName:SetChecked(false)
-            r.cbBnet:SetChecked(false)
-            if r.cbBad then r.cbBad:SetChecked(false) end
-            if r.badDropdown then r.badDropdown:Hide() end
-            r.dropdown:Hide()
+    -- cbMain is now hidden - kept for compatibility
+    r.cbMain:SetScript("OnClick", function(self)
+        -- No longer needed
+    end)
+
+    -- cbName is hidden - kept for compatibility
+    r.cbName:SetScript("OnClick", function()
+        -- No longer needed
+    end)
+
+    -- cbBnet just updates preview
+    r.cbBnet:SetScript("OnClick", function()
+        if SSW.UI.UpdateRowPreview then
+            SSW.UI.UpdateRowPreview(r)
         end
+    end)
+
+    -- cbIgnore just updates preview
+    r.cbIgnore:SetScript("OnClick", function()
         if SSW.UI.UpdateRowPreview then
             SSW.UI.UpdateRowPreview(r)
         end
@@ -861,30 +876,6 @@ btnSend:SetPoint("LEFT", btnNone, "RIGHT", 8, 0)
 btnSend:SetText("Send Whispers")
 btnSend:SetNormalFontObject("GameFontNormalLarge")
 
-local btnThankAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnThankAll:SetSize(100, 36)
-btnThankAll:SetPoint("LEFT", btnSend, "RIGHT", 8, 0)
-btnThankAll:SetText("Ty All")
-
-local btnBlameAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnBlameAll:SetSize(100, 36)
-btnBlameAll:SetPoint("LEFT", btnThankAll, "RIGHT", 8, 0)
-btnBlameAll:SetText("Blame All")
-
-local btnSettings = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnSettings:SetSize(120, 36)
-btnSettings:SetPoint("BOTTOMRIGHT", -238, 15)
-btnSettings:SetText("Settings")
-btnSettings:SetScript("OnClick", function()
-    if SSW.ShowSettings then SSW.ShowSettings() end
-end)
-
-local btnClose = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnClose:SetSize(100, 36)
-btnClose:SetPoint("BOTTOMRIGHT", -18, 15)
-btnClose:SetText("Close")
-btnClose:SetScript("OnClick", function() sendWin:Hide() end)
-
 sendWin:SetScript("OnHide", function()
     if SSW.UnlockSnapshot then
         SSW.UnlockSnapshot()
@@ -895,28 +886,18 @@ function SSW.UI.SetSendUIEnabled(enabled)
     btnSend:SetEnabled(enabled)
     btnAll:SetEnabled(enabled)
     btnNone:SetEnabled(enabled)
-    btnThankAll:SetEnabled(enabled)
-    btnBlameAll:SetEnabled(enabled)
-    btnClose:SetEnabled(enabled)
     btnSend:SetAlpha(enabled and 1 or 0.35)
     btnAll:SetAlpha(enabled and 1 or 0.35)
     btnNone:SetAlpha(enabled and 1 or 0.35)
-    btnThankAll:SetAlpha(enabled and 1 or 0.35)
-    btnBlameAll:SetAlpha(enabled and 1 or 0.35)
-    btnClose:SetAlpha(enabled and 1 or 0.35)
 
     for i = 1, SSW.MAX_ROWS do
         local r = rows[i]
         if r and r:IsShown() then
-            r.cbMain:SetEnabled(enabled)
-            r.cbMain:SetAlpha(enabled and 1 or 0.35)
-            local subsEnabled = enabled and r.cbMain:GetChecked()
-            r.cbName:SetEnabled(subsEnabled)
-            r.cbBnet:SetEnabled(subsEnabled)
-            r.cbBlame:SetEnabled(subsEnabled)
-            r.cbName:SetAlpha(subsEnabled and 1 or 0.25)
-            r.cbBnet:SetAlpha(subsEnabled and 1 or 0.25)
-            r.cbBlame:SetAlpha(subsEnabled and 1 or 0.25)
+            -- Checkboxes are now always enabled (no dependency on Send checkbox)
+            r.cbBnet:SetAlpha(1)
+            if r.cbIgnore and SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
+                r.cbIgnore:SetAlpha(1)
+            end
         end
     end
 end
@@ -926,8 +907,17 @@ btnAll:SetScript("OnClick", function()
     for i = 1, SSW.MAX_ROWS do
         local r = rows[i]
         if r:IsShown() then
-            r.cbMain:SetChecked(true)
-            r:SetEnabledSubs(true)
+            -- Select first GOOD message for all
+            r.msg1Index = 1
+            r.badMsgIndex = nil
+            local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+            if #msg1List > 0 then
+                UIDropDownMenu_SetSelectedID(r.dropdown, 1)
+                UIDropDownMenu_SetText(r.dropdown, msg1List[1])
+            end
+            if r.badDropdown then
+                UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
+            end
             if SSW.UI.UpdateRowPreview then SSW.UI.UpdateRowPreview(r) end
         end
     end
@@ -938,26 +928,15 @@ btnNone:SetScript("OnClick", function()
     for i = 1, SSW.MAX_ROWS do
         local r = rows[i]
         if r:IsShown() then
-            r.cbMain:SetChecked(false)
-            r:SetEnabledSubs(false)
+            -- Reset both dropdowns
+            r.msg1Index = nil
+            r.badMsgIndex = nil
+            UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
+            if r.badDropdown then
+                UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
+            end
             if r.preview then r.preview:SetText("") end
         end
-    end
-end)
-
--- Ty all button handler - sends random whispers immediately and adds to ignore list
-btnThankAll:SetScript("OnClick", function()
-    -- Send random messages (different for each player) immediately with ignore
-    if SSW.SendImmediatelyWithIgnore then
-        SSW.SendImmediatelyWithIgnore("RANDOM", false)
-    end
-end)
-
--- Blame all button handler - sends "..." to all players immediately and adds to ignore list
-btnBlameAll:SetScript("OnClick", function()
-    -- Send "..." to all players immediately with ignore
-    if SSW.SendImmediatelyWithIgnore then
-        SSW.SendImmediatelyWithIgnore("...", false)
     end
 end)
 
@@ -970,35 +949,30 @@ function SSW.UI.UpdateRowPreview(r)
         if r.preview then r.preview:SetText("") end
         return
     end
-    -- No preview if row not selected
-    if not r.cbMain:GetChecked() then
-        if r.preview then r.preview:SetText("") end
-        return
-    end
 
-    -- Check if Blame checkbox is checked
-    if r.cbBlame:GetChecked() then
-        -- Show "..." and indicate ignore list
-        if r.preview then
-            r.preview:SetText("Preview: ... (player will be added to ignore list)")
-        end
-        return
-    end
-
-    -- Check if BAD MODE checkbox is checked
-    if r.cbBad and r.cbBad:GetChecked() then
-        -- Show BAD MODE message
-        local badIdx = r.badMsgIndex or 1
-        local badList = SSW.GetBadModePresets and SSW.GetBadModePresets() or {}
-        if #badList > 0 then
-            local badTemplate = badList[badIdx] or "..."
+    -- Check if BAD message is selected
+    if r.badMsgIndex and r.badMsgIndex > 0 then
+        -- Show BAD MODE message preview
+        local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
+        if #badList > 0 and r.badMsgIndex <= #badList then
+            local badTemplate = badList[r.badMsgIndex] or "..."
+            
+            -- Strip custom tag if present
+            if type(badTemplate) == "string" and badTemplate:sub(1, #SSW.CUSTOM_TAG) == SSW.CUSTOM_TAG then
+                badTemplate = badTemplate:sub(#SSW.CUSTOM_TAG + 1)
+            end
             
             --Remove "Random" indicator and get actual message
             if badTemplate:lower():find("random", 1, true) then
                 local candidates = {}
                 for _, v in ipairs(badList) do
-                    if not v:lower():find("random", 1, true) then
-                        table.insert(candidates, v)
+                    local raw = v
+                    -- Strip custom tag for comparison
+                    if type(raw) == "string" and raw:sub(1, #SSW.CUSTOM_TAG) == SSW.CUSTOM_TAG then
+                        raw = raw:sub(#SSW.CUSTOM_TAG + 1)
+                    end
+                    if not raw:lower():find("random", 1, true) and raw:sub(1, #SSW.CUSTOM_TAG) ~= SSW.CUSTOM_TAG then
+                        table.insert(candidates, raw)
                     end
                 end
                 if #candidates > 0 then
@@ -1014,35 +988,48 @@ function SSW.UI.UpdateRowPreview(r)
                 :gsub("{spec}", r.specName or "")
             
             if r.preview then
-                r.preview:SetText("|cFFFF4444[BAD]|r Preview: " .. badMsg)
+                local ignoreText = ""
+                if r.cbIgnore and r.cbIgnore:GetChecked() then
+                    ignoreText = " (player will be ignored)"
+                end
+                r.preview:SetText("|cFFFF4444[BAD]|r Preview: " .. badMsg .. ignoreText)
             end
         end
         return
     end
 
-    local includeName = r.cbName:GetChecked()
-    local includeSecond = r.cbBnet:GetChecked()
+    -- Check if GOOD message is selected
+    if r.msg1Index and r.msg1Index > 0 then
+        local includeName = false  -- Never include name (per new requirement)
+        local includeSecond = r.cbBnet:GetChecked()
 
-    -- Build meta data for the new BuildMessagesForTarget function
-    local meta = {
-        role = r.role or "NONE",
-        specID = r.specID or 0,
-        msg1Index = r.msg1Index or 1,
-    }
+        -- Build meta data for the new BuildMessagesForTarget function
+        local meta = {
+            role = r.role or "NONE",
+            specID = r.specID or 0,
+            msg1Index = r.msg1Index,
+        }
 
-    -- Use the new function from Presets.lua
-    local msg1, msg2 = SSW.BuildMessagesForTarget(
-        r.playerName,
-        includeName,
-        includeSecond,
-        meta
-    )
+        -- Use the new function from Presets.lua
+        local msg1, msg2 = SSW.BuildMessagesForTarget(
+            r.playerName,
+            includeName,
+            includeSecond,
+            meta
+        )
 
-    local line = msg1
-    if includeSecond and msg2 ~= "" then line = line .. " | " .. msg2 end
+        local line = msg1
+        if includeSecond and msg2 ~= "" then line = line .. " | " .. msg2 end
 
-    if r.preview then 
-        r.preview:SetText("Preview: " .. line)
+        if r.preview then 
+            r.preview:SetText("Preview: " .. line)
+        end
+        return
+    end
+    
+    -- No message selected
+    if r.preview then
+        r.preview:SetText("")
     end
 end
 
@@ -1085,6 +1072,38 @@ function SSW.UI.RebuildRowMessageDropdowns()
                 local idx = r.msg1Index or 1
                 if idx >= 1 and idx <= #msg1List then
                     UIDropDownMenu_SetText(r.dropdown, msg1List[idx])
+                end
+            end
+        end
+        
+        -- Re-initialize BAD dropdown with updated message list
+        if r and r.badDropdown and SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
+            UIDropDownMenu_Initialize(r.badDropdown, function(self, level)
+                local selectedIdx = r.badMsgIndex or 1
+                local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
+                for idx, txt in ipairs(badList) do
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text = txt
+                    info.checked = (idx == selectedIdx)
+                    info.func = function()
+                        r.badMsgIndex = idx
+                        UIDropDownMenu_SetSelectedID(r.badDropdown, idx)
+                        UIDropDownMenu_SetText(r.badDropdown, txt)
+                        CloseDropDownMenus()
+                        if SSW.UI.UpdateRowPreview then
+                            SSW.UI.UpdateRowPreview(r)
+                        end
+                    end
+                    UIDropDownMenu_AddButton(info, level)
+                end
+            end)
+            
+            -- Update the BAD dropdown text if it's currently showing
+            if r.badDropdown:IsShown() then
+                local badList = SSW.GetBadModePresetsWithCustom()
+                local idx = r.badMsgIndex or 1
+                if idx >= 1 and idx <= #badList then
+                    UIDropDownMenu_SetText(r.badDropdown, badList[idx])
                 end
             end
         end
@@ -1148,6 +1167,11 @@ local function PopulateFromSnapshot()
             if r.nameBtn then
                 r.nameBtn:Show()
             end
+        end
+        
+        -- Show dropdowns for this row
+        if r.ShowDropdowns then
+            r:ShowDropdowns()
         end
         
         r:Show()
