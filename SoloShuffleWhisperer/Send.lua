@@ -72,19 +72,17 @@ local function ProcessWhispers(isTest)
     -- Process each row
     for i = 1, SSW.MAX_ROWS do
         local r = rows[i]
-        if r and r:IsShown() and r.cbMain:GetChecked() then
+        -- Check if row is shown and has either GOOD or BAD message selected
+        local hasGoodMessage = r.msg1Index and r.msg1Index > 0
+        local hasBadMessage = r.badMsgIndex and r.badMsgIndex > 0
+        
+        if r and r:IsShown() and (hasGoodMessage or hasBadMessage) then
             if not r.playerName or r.playerName == "" then
-                SSW.Print("Row " .. i .. " selected but has no target name.")
+                SSW.Print("Row " .. i .. " has message selected but no target name.")
             else
                 local classColor = r.text:GetText() and (r.text:GetText():match("|cff(%x+)") or "ffffff") or "ffffff"
                 local clean = SSW.CleanName(r.playerName)
                 local target = r.playerName
-
-                -- Check if Blame checkbox is checked
-                local isBlame = r.cbBlame:GetChecked()
-                
-                -- Check if BAD MODE checkbox is checked
-                local isBadMode = r.cbBad and r.cbBad:GetChecked()
 
                 -- Check anti-spam for this target
                 local canSend = true
@@ -97,25 +95,16 @@ local function ProcessWhispers(isTest)
                 end
 
                 if canSend then
-                    if isBlame then
-                        -- Blame mode: send "..." and add to ignore list
-                        if isTest then
-                            PreviewLine(classColor, "[TEST -> " .. clean .. " - BLAME]", "... (will be ignored)")
-                        elseif SSW.IsArmed() then
-                            table.insert(queue, { target = target, text = "...", addToIgnore = true })
-                        else
-                            PreviewLine(classColor, "[SAFE -> " .. clean .. " - BLAME]", "... (will be ignored)")
-                        end
-                    elseif isBadMode and SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
+                    if hasBadMessage and SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
                         -- BAD MODE: send negative message
                         local meta = {
                             role = r.role or "NONE",
                             specID = r.specID or 0,
                         }
-                        local badMsg = SSW.BuildBadMessage(r.playerName, r.badMsgIndex or 1, meta)
+                        local badMsg = SSW.BuildBadMessage(r.playerName, r.badMsgIndex, meta)
                         
                         -- Check if should ignore after sending BAD message
-                        local shouldIgnore = r.cbIgnoreOnBad and r.cbIgnoreOnBad:GetChecked()
+                        local shouldIgnore = r.cbIgnore and r.cbIgnore:GetChecked()
                         
                         if isTest then
                             if shouldIgnore then
@@ -136,8 +125,8 @@ local function ProcessWhispers(isTest)
                                 PreviewLine(classColor, "[SAFE -> " .. clean .. " - BAD]", badMsg)
                             end
                         end
-                    else
-                        -- Normal mode
+                    elseif hasGoodMessage then
+                        -- GOOD mode: send positive message
                         local msg1, msg2 = BuildMessagesForRow(r)
                         
                         if isTest then
