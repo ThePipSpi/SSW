@@ -9,7 +9,6 @@
 Core.lua
 Presets.lua
 AntiSpam.lua
-Accessibility.lua
 MinimapButton.lua
 Snapshot.lua
 Triggers.lua

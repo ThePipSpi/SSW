@@ -69,7 +69,6 @@ Messages should be:
 - "gg {name}"
 - "ty {name}!"
 - "good games {name}!"
-- "Random" (picks random preset)
 - "{praise} {name}"
 - "gg {name} :)"
 - "nice games!"
@@ -80,7 +79,6 @@ Messages should be:
 - "if you wanna queue again: {btag}"
 - "feel free to add me: {btag}"
 - "up for more games? {btag}"
-- "Random" (picks random preset)
 - "if you want to queue more: {btag}"
 ```
 
@@ -91,7 +89,6 @@ Messages should be:
 - "you threw {name}"
 - "stop tunneling {name}"
 - "peel next time {name}"
-- "Random"
 - "watch positioning {name}"
 - "check your gear {name}"
 ```
@@ -107,7 +104,7 @@ Messages should be:
 
 #### Custom Messages
 - Players can define up to 10 custom messages in settings
-- Custom messages appear in dropdown but are excluded from "Random" selection
+- Custom messages appear in dropdown
 - Stored in `SSW_Config.customLines`
 - Tagged with "[Custom] " prefix in UI
 - Implementation: `Presets.lua`
@@ -139,7 +136,7 @@ Messages should be:
 - **All** (90px): Check all Send checkboxes
 - **None** (90px): Uncheck all Send checkboxes
 - **Send Whispers** (160px): Process selected whispers according to current mode (respects Blame checkbox)
-- **Ty All** (100px): **GOOD WILL** - Immediately send random positive message to all players and add to ignore (quick thank you + avoid future matches)
+- **Ty All** (100px): **GOOD WILL** - Immediately send first preset message to all players and add to ignore (quick thank you + avoid future matches)
 - **Blame All** (100px): **BLAME MODE** - Immediately send "..." to all players and add to ignore (quick dismissal of toxic team)
 - **Settings** (120px): Open settings panel
 - **Close** (100px): Close whisper window
@@ -201,14 +198,7 @@ Messages should be:
 - **Target**: PARTY chat channel
 - **Implementation**: `AutoGreet.lua`
 
-### 11. Accessibility Features
-- **One-Tap Mode**: "Ty All" and "Blame All" for quick actions
-- **Visual Countdown**: Shows countdown before sending
-- **Tooltips**: Detailed tooltips on all interactive elements
-- **Screen Reader**: Labels for accessibility addons
-- **Implementation**: `Accessibility.lua`
-
-### 12. Data Storage
+### 11. Data Storage
 
 #### Account-Wide (SSW_Config)
 ```lua
@@ -246,13 +236,13 @@ Messages should be:
 }
 ```
 
-### 13. Slash Commands
+### 12. Slash Commands
 - `/ssw` - Open settings panel
 - `/ssw show` - Open whisper window manually
 - `/ssw test` - Open in TEST mode with dummy data
 - `/ssw arm` - Toggle between SAFE and LIVE modes
 
-### 14. Technical Constants
+### 13. Technical Constants
 - `MAX_ROWS`: 5 (max players per row)
 - `SEND_DELAY`: 0.35 seconds (between whispers)
 - `DEFAULT_PRE_SEND_DELAY`: 3.5 seconds (countdown)
@@ -264,11 +254,10 @@ Messages should be:
 | File | Purpose |
 |------|---------|
 | **Core.lua** | Core utilities, SavedVariables init, slash commands, region detection |
-| **Presets.lua** | Message templates, placeholder replacement, random selection |
+| **Presets.lua** | Message templates, placeholder replacement |
 | **Snapshot.lua** | Party roster tracking, scoreboard capture |
 | **Send.lua** | Message sending logic, queue management, whisper dispatch |
 | **UI.lua** | Main UI window, settings panel, player rows, buttons |
-| **Accessibility.lua** | One-tap mode, accessibility features |
 | **AutoGreet.lua** | Automatic party greeting |
 | **MinimapButton.lua** | Minimap icon, tooltips, quick controls |
 | **AntiSpam.lua** | Spam protection, cooldown tracking |
@@ -352,15 +341,14 @@ Messages should be:
 
 ### Message Building
 1. Get template from preset index
-2. If "Random", pick random non-custom preset
-3. Replace placeholders:
+2. Replace placeholders:
    - {name} → Clean player name
    - {praise} → Random praise phrase
    - {role} → Tank/Healer/DPS
    - {spec} → Specialization name
    - {btag} → Your BattleTag
-4. Clean up artifacts (extra spaces, dashes, punctuation)
-5. Trim to MAX_LEN (140 chars)
+3. Clean up artifacts (extra spaces, dashes, punctuation)
+4. Trim to MAX_LEN (140 chars)
 
 ### Checkbox Logic (Triple Purpose Design)
 The checkboxes enforce mutual exclusivity between GOOD WILL mode, BAD MODE, and BLAME mode:
@@ -459,10 +447,9 @@ The checkboxes enforce mutual exclusivity between GOOD WILL mode, BAD MODE, and 
 
 ### Good Will Mode
 - [ ] Name/BNet checkboxes work for positive messages
-- [ ] Ty All sends random positive messages to all
+- [ ] Ty All sends first preset message to all
 - [ ] Placeholders replaced correctly in messages
 - [ ] Custom messages appear in dropdown
-- [ ] Custom messages excluded from Random
 - [ ] BattleTag invitation sends as second message
 
 ### Blame Mode

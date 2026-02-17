@@ -2,7 +2,7 @@
 -- Friendly, low-drama message presets for Solo Shuffle.
 -- PVP philosophy: Less talk is better, but praise over flame.
 -- Kept intentionally neutral and short to avoid sarcasm or drama.
--- Custom lines are stored in SSW_Config.customLines and are NEVER included in "Random".
+-- Custom lines are stored in SSW_Config.customLines and are appended at runtime.
 
 SSW = SSW or {}
 
@@ -16,7 +16,6 @@ SSW.MSG1_PRESETS = {
     "gg",
     "ty!",
     "good games!",
-    "Random",
     "{praise}",
     "gg :)",
     "nice games!",
@@ -27,7 +26,6 @@ SSW.MSG2_PRESETS = {
     "if you wanna queue again: {btag}",
     "feel free to add me: {btag}",
     "up for more games? {btag}",
-    "Random",
     "if you want to queue more: {btag}",
 }
 
@@ -40,16 +38,14 @@ SSW.BAD_MODE_PRESETS = {
     "you threw",
     "stop tunneling",
     "peel next time",
-    "Random",
     "watch positioning",
     "check your gear",
 }
 
--- Custom lines are appended at runtime but excluded from Random selection
+-- Custom entries are appended at runtime.
 -- They are stored in SSW_Config.customLines = { [1] = "...", ... }
 
 -- Build combined msg1 list (presets + non-empty custom lines)
--- Custom entries are tagged so the Random picker can skip them.
 SSW.CUSTOM_TAG = "[Custom] "
 local CUSTOM_TAG = SSW.CUSTOM_TAG
 
@@ -121,27 +117,6 @@ local function PresetByIndex(list, idx)
     -- Strip the custom tag to get the raw template
     if type(current) == "string" and current:sub(1, #CUSTOM_TAG) == CUSTOM_TAG then
         current = current:sub(#CUSTOM_TAG + 1)
-    end
-
-    local isRandom = (type(current) == "string") and current:lower():find("random", 1, true) ~= nil
-
-    if isRandom then
-        -- Pick from all non-"Random" and non-custom presets in the list
-        local candidates = {}
-        for _, v in ipairs(list) do
-            if type(v) == "string"
-               and v:lower():find("random", 1, true) == nil
-               and v:sub(1, #CUSTOM_TAG) ~= CUSTOM_TAG then
-                table.insert(candidates, v)
-            end
-        end
-
-        if #candidates == 0 then
-            return tostring(list[1] or ""), idx
-        end
-
-        local r = (type(math.random) == "function") and math.random(1, #candidates) or 1
-        return candidates[r], idx
     end
 
     return current, idx
@@ -315,7 +290,7 @@ function SSW.BuildBadMessage(targetFullName, badMsgIndex, meta)
         return "..."  -- Fallback
     end
     
-    -- Get template (handle Random selection)
+    -- Get template
     local badIdx = tonumber(badMsgIndex) or 1
     if badIdx < 1 or badIdx > #badList then badIdx = 1 end
     
@@ -324,24 +299,6 @@ function SSW.BuildBadMessage(targetFullName, badMsgIndex, meta)
     -- Strip custom tag if present
     if type(badTemplate) == "string" and badTemplate:sub(1, #CUSTOM_TAG) == CUSTOM_TAG then
         badTemplate = badTemplate:sub(#CUSTOM_TAG + 1)
-    end
-    
-    -- Handle "Random" selection (exclude custom messages from random)
-    if type(badTemplate) == "string" and badTemplate:lower():find("random", 1, true) then
-        local candidates = {}
-        for _, v in ipairs(badList) do
-            if type(v) == "string" 
-               and not v:lower():find("random", 1, true)
-               and v:sub(1, #CUSTOM_TAG) ~= CUSTOM_TAG then
-                table.insert(candidates, v)
-            end
-        end
-        if #candidates > 0 then
-            local r = (type(math.random) == "function") and math.random(1, #candidates) or 1
-            badTemplate = candidates[r]
-        else
-            badTemplate = "..."
-        end
     end
     
     -- Apply placeholders (NO {name})
