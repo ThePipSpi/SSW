@@ -37,9 +37,6 @@ end
 
 -- Main send function
 local function ProcessWhispers(isTest)
-    queue = {}
-    local selected = 0
-
     if not SSW.UI or not SSW.UI.rows then
         SSW.Print("UI not ready.")
         return
@@ -87,14 +84,8 @@ end
 -- Internal send function (called after confirmation or if no BAD messages)
 local function ProcessWhispersInternal(isTest)
     queue = {}
-    local selected = 0
-
-    if not SSW.UI or not SSW.UI.rows then
-        SSW.Print("UI not ready.")
-        return
-    end
-
     local rows = SSW.UI.rows
+    local selected = 0
 
     -- Check anti-spam
     if not isTest and SSW.IsArmed() then

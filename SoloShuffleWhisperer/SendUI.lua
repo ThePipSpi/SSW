@@ -23,6 +23,8 @@ sendWin:EnableMouse(true)
 sendWin:RegisterForDrag("LeftButton")
 sendWin:SetScript("OnDragStart", sendWin.StartMoving)
 sendWin:SetScript("OnDragStop", sendWin.StopMovingOrSizing)
+sendWin:SetFrameStrata("HIGH")
+sendWin:SetFrameLevel(100)
 sendWin:Hide()
 
 SSW.UI.sendWin = sendWin
@@ -391,6 +393,7 @@ for i = 1, SSW.MAX_ROWS do
     -- Show dropdowns when row is shown
     function r:ShowDropdowns()
         r.dropdown:Show()
+        r.goodLabel:Show()
         if not r.msg1Index then
             UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
         else
@@ -405,6 +408,7 @@ for i = 1, SSW.MAX_ROWS do
         -- Show BAD dropdown if BAD MODE is enabled
         if SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() and r.badDropdown then
             r.badDropdown:Show()
+            r.badLabel:Show()
             if not r.badMsgIndex then
                 UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
             else
@@ -605,11 +609,11 @@ function SSW.UI.UpdateRowPreview(r)
                 :gsub("{spec}", r.specName or "")
             
             if r.preview then
-                local ignoreText = ""
+                local ignoreSuffix = ""
                 if r.cbIgnore and r.cbIgnore:GetChecked() then
-                    ignoreText = " |cFFFF8800(will auto-ignore)|r"
+                    ignoreSuffix = " |cFFFF8800(will auto-ignore)|r"
                 end
-                r.preview:SetText("|cFFFF4444[BAD MESSAGE]|r " .. badMsg .. ignoreText)
+                r.preview:SetText("|cFFFF4444[BAD MESSAGE]|r " .. badMsg .. ignoreSuffix)
             end
         end
         return
@@ -803,6 +807,8 @@ local function ResetRows()
         if r.preview then r.preview:SetText("") end
         if r.pvpBtn then r.pvpBtn:Hide() end
         if r.nameBtn then r.nameBtn:Hide() end
+        if r.goodLabel then r.goodLabel:Hide() end
+        if r.badLabel then r.badLabel:Hide() end
     end
 end
 
@@ -863,7 +869,7 @@ function SSW.UI.UpdateStatus(isTest)
         sendWin.subText:SetText("|cFF00FFFFSAFE MODE|r - Preview only. No whispers will be sent. Use /ssw arm to enable LIVE mode.")
     end
 
-    sendWin.noteLine:SetText("Select message type (GOOD or BAD) and optionally enable 2nd message or auto-ignore. Use Selfcheck button to verify your own check-pvp.fr profile.")
+    sendWin.noteLine:SetText("Select message type (GOOD or BAD) and configure options. Use Selfcheck to view your check-pvp.fr profile.")
 end
 
 -- =========================================
