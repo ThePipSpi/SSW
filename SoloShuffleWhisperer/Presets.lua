@@ -58,14 +58,6 @@ end
 -- =========================================
 -- Helpers
 -- =========================================
-local function IsAllowed(list, s)
-    if not s then return false end
-    for _, v in ipairs(list) do
-        if s == v then return true end
-    end
-    return false
-end
-
 function SSW.CleanOutgoing(s)
     s = tostring(s or "")
     s = s:gsub("\r", " ")
@@ -83,9 +75,7 @@ local function PresetByIndex(list, idx)
     local current = list[idx]
 
     -- Strip the custom tag to get the raw template
-    local isCustom = false
     if type(current) == "string" and current:sub(1, #CUSTOM_TAG) == CUSTOM_TAG then
-        isCustom = true
         current = current:sub(#CUSTOM_TAG + 1)
     end
 

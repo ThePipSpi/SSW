@@ -188,7 +188,7 @@ SSW.MSG2_PRESETS = {
 
 #### Customize Praise Phrases
 
-**Location**: `Presets.lua`, around line 176
+**Location**: `Presets.lua`, line 166
 
 ```lua
 local function PraiseForRole(role)
