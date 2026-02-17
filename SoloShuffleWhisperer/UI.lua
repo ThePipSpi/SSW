@@ -453,15 +453,23 @@ for i = 1, SSW.MAX_ROWS do
                     hideOnEscape = true,
                     hasEditBox = true,
                     OnShow = function(self, data)
-                        -- In WoW 11.0+, editBox may not be immediately available in OnShow
-                        -- Use C_Timer.After to defer execution slightly
-                        C_Timer.After(0, function()
-                            if self.editBox then
-                                self.editBox:SetText(data)
-                                self.editBox:HighlightText()
-                                self.editBox:SetFocus()
-                            end
-                        end)
+                        -- Find the editBox - try multiple common methods
+                        local editBox = self.editBox or self:GetChildren()
+                        if editBox and editBox.SetText then
+                            editBox:SetText(data or "")
+                            editBox:HighlightText()
+                            editBox:SetFocus()
+                        else
+                            -- Fallback: try after a delay
+                            C_Timer.After(0.05, function()
+                                local eb = self.editBox
+                                if eb and eb.SetText then
+                                    eb:SetText(data or "")
+                                    eb:HighlightText()
+                                    eb:SetFocus()
+                                end
+                            end)
+                        end
                     end,
                     EditBoxOnEscapePressed = function(self)
                         self:GetParent():Hide()
