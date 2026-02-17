@@ -65,8 +65,10 @@ end
 -- =========================================
 
 local configWin = CreateFrame("Frame", "SSW_ConfigFrame", UIParent, "BasicFrameTemplateWithInset")
-configWin:SetSize(520, 720)
+configWin:SetSize(450, 550)
 configWin:SetPoint("CENTER", 0, 60)
+configWin:SetFrameStrata("HIGH")
+configWin:SetFrameLevel(100)
 configWin:SetMovable(true)
 configWin:EnableMouse(true)
 configWin:RegisterForDrag("LeftButton")
@@ -77,6 +79,16 @@ configWin:Hide()
 configWin.title = configWin:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 configWin.title:SetPoint("TOPLEFT", 14, -10)
 configWin.title:SetText("Solo Shuffle Whisperer - Settings")
+
+-- Create scroll frame for settings content
+local scrollFrame = CreateFrame("ScrollFrame", nil, configWin, "UIPanelScrollFrameTemplate")
+scrollFrame:SetPoint("TOPLEFT", configWin.InsetBg, "TOPLEFT", 4, -4)
+scrollFrame:SetPoint("BOTTOMRIGHT", configWin.InsetBg, "BOTTOMRIGHT", -24, 50)
+
+local scrollChild = CreateFrame("Frame")
+scrollFrame:SetScrollChild(scrollChild)
+scrollChild:SetWidth(scrollFrame:GetWidth())
+scrollChild:SetHeight(1)
 
 -- Section separator helper
 local function AddSectionHeader(parent, text, yOff)
@@ -94,11 +106,11 @@ local function AddSectionHeader(parent, text, yOff)
 end
 
 -- ── Section 1: Custom Text Lines ──
-local y = AddSectionHeader(configWin, "CUSTOM MESSAGE LINES  (excluded from Random)", -38)
+local y = AddSectionHeader(scrollChild, "CUSTOM MESSAGE LINES  (excluded from Random)", -10)
 
-local custLabel = configWin:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+local custLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 custLabel:SetPoint("TOPLEFT", 18, y)
-custLabel:SetWidth(480)
+custLabel:SetWidth(400)
 custLabel:SetJustifyH("LEFT")
 custLabel:SetText("Write your own messages below. They appear in the send window message dropdown but are never picked by \"Random\".\nPlaceholders: {name}, {praise}, {role}, {spec}, {btag}")
 
@@ -108,12 +120,12 @@ local customBoxes  = {}
 
 for ci = 1, SSW.MAX_CUSTOM_LINES do
     local boxY = y - 32 - ((ci - 1) * (CUSTOM_BOX_H + CUSTOM_GAP))
-    local numLbl = configWin:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    local numLbl = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     numLbl:SetPoint("TOPLEFT", 18, boxY - 3)
     numLbl:SetText(tostring(ci) .. ".")
 
-    local box = CreateFrame("EditBox", "SSW_CustomBox" .. ci, configWin, "InputBoxTemplate")
-    box:SetSize(440, CUSTOM_BOX_H)
+    local box = CreateFrame("EditBox", "SSW_CustomBox" .. ci, scrollChild, "InputBoxTemplate")
+    box:SetSize(360, CUSTOM_BOX_H)
     box:SetPoint("TOPLEFT", 36, boxY)
     box:SetAutoFocus(false)
     box:SetMaxLetters(140)
@@ -134,10 +146,10 @@ end
 
 -- ── Section 2: Behavior ──
 local yBehav = y - 32 - (SSW.MAX_CUSTOM_LINES * (CUSTOM_BOX_H + CUSTOM_GAP)) - 10
-yBehav = AddSectionHeader(configWin, "BEHAVIOR", yBehav)
+yBehav = AddSectionHeader(scrollChild, "BEHAVIOR", yBehav)
 
 -- Sezione Message 1
-local section1 = CreateFrame("Frame", nil, configWin, "BackdropTemplate")
+local section1 = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
 section1:SetPoint("TOPLEFT", 12, yBehav - 8)
 section1:SetPoint("TOPRIGHT", -12, yBehav - 8)
 section1:SetHeight(85)
@@ -160,7 +172,7 @@ hint1:SetPoint("TOPLEFT", lbl1, "BOTTOMLEFT", 0, -2)
 hint1:SetText("Default preset (can be changed per-player in send window)")
 
 -- Sezione Message 2
-local section2 = CreateFrame("Frame", nil, configWin, "BackdropTemplate")
+local section2 = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
 section2:SetPoint("TOPLEFT", 12, yBehav - 108)
 section2:SetPoint("TOPRIGHT", -12, yBehav - 108)
 section2:SetHeight(85)
@@ -183,7 +195,7 @@ hint2:SetPoint("TOPLEFT", lbl2, "BOTTOMLEFT", 0, -2)
 hint2:SetText("Optional second message with BattleTag info")
 
 -- Sezione Delay
-local section3 = CreateFrame("Frame", nil, configWin, "BackdropTemplate")
+local section3 = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
 section3:SetPoint("TOPLEFT", 12, yBehav - 208)
 section3:SetPoint("TOPRIGHT", -12, yBehav - 208)
 section3:SetHeight(50)
@@ -202,27 +214,27 @@ lblDelay:SetText("LIVE Mode: Delay before sending (seconds)")
 lblDelay:SetTextColor(1, 0.82, 0, 1)
 
 -- Checkboxes
-local cbAutoGreet = CreateFrame("CheckButton", nil, configWin, "ChatConfigCheckButtonTemplate")
+local cbAutoGreet = CreateFrame("CheckButton", nil, scrollChild, "ChatConfigCheckButtonTemplate")
 cbAutoGreet:SetPoint("TOPLEFT", 18, yBehav - 275)
 cbAutoGreet.Text:ClearAllPoints()
 cbAutoGreet.Text:SetPoint("LEFT", cbAutoGreet, "RIGHT", 6, 1)
-cbAutoGreet.Text:SetWidth(450)
+cbAutoGreet.Text:SetWidth(370)
 cbAutoGreet.Text:SetJustifyH("LEFT")
 cbAutoGreet.Text:SetText("Auto greeting in party (accessibility)")
 cbAutoGreet:SetScript("OnClick", function(self)
     SSW_Config.autoGreetEnabled = self:GetChecked() and true or false
 end)
 
-local hint = configWin:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+local hint = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 hint:SetPoint("TOPLEFT", cbAutoGreet, "BOTTOMLEFT", 0, -15)
-hint:SetWidth(480)
+hint:SetWidth(400)
 hint:SetJustifyH("LEFT")
 hint:SetText("Available placeholders: {name}, {praise}, {role}, {spec}, {btag}\nMessage 1 can be customized per-player in the send window.")
 hint:SetTextColor(0.7, 0.7, 0.7, 1)
 
 local closeBtnCfg = CreateFrame("Button", nil, configWin, "UIPanelButtonTemplate")
 closeBtnCfg:SetSize(140, 36)
-closeBtnCfg:SetPoint("BOTTOM", 0, 15)
+closeBtnCfg:SetPoint("BOTTOM", 0, 10)
 closeBtnCfg:SetText("Close")
 closeBtnCfg:SetNormalFontObject("GameFontNormalLarge")
 closeBtnCfg:SetScript("OnClick", function() configWin:Hide() end)
@@ -253,19 +265,19 @@ local function MakeDropdown(parent, name, width, getItemsFunc, onPick)
     return dd
 end
 
-local dd1 = MakeDropdown(configWin, "SSW_DD1", 440, function() 
+local dd1 = MakeDropdown(scrollChild, "SSW_DD1", 360, function() 
     return SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
 end, function(i)
     SSW_Config.msg1Index = i
 end)
 dd1:SetPoint("TOPLEFT", section1, "TOPLEFT", -2, -32)
 
-local dd2 = MakeDropdown(configWin, "SSW_DD2", 440, SSW.MSG2_PRESETS, function(i)
+local dd2 = MakeDropdown(scrollChild, "SSW_DD2", 360, SSW.MSG2_PRESETS, function(i)
     SSW_Config.msg2Index = i
 end)
 dd2:SetPoint("TOPLEFT", section2, "TOPLEFT", -2, -32)
 
-local delayBox = CreateFrame("EditBox", "SSW_DelayBox", configWin, "InputBoxTemplate")
+local delayBox = CreateFrame("EditBox", "SSW_DelayBox", scrollChild, "InputBoxTemplate")
 delayBox:SetSize(80, 30)
 delayBox:SetPoint("TOPLEFT", section3, "TOPLEFT", 10, -24)
 delayBox:SetAutoFocus(false)
@@ -275,6 +287,10 @@ delayBox:SetScript("OnEnterPressed", function(self)
     if not v then v = SSW.DEFAULT_PRE_SEND_DELAY end
     SSW_Config.preSendDelay = math.max(0, v)
 end)
+
+-- Set scroll child height to fit all content
+local totalHeight = math.abs(yBehav - 275) + 80  -- Calculate total content height
+scrollChild:SetHeight(totalHeight)
 
 configWin:SetScript("OnShow", function()
     cbAutoGreet:SetChecked(SSW_Config and SSW_Config.autoGreetEnabled)
