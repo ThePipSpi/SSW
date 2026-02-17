@@ -530,20 +530,30 @@ btnBg:SetBackdrop({
 })
 btnBg:SetBackdropColor(0.05, 0.05, 0.05, 0.6)
 
+local btnAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
+btnAll:SetSize(90, 36)
+btnAll:SetPoint("BOTTOMLEFT", 18, 15)
+btnAll:SetText("All")
+
+local btnNone = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
+btnNone:SetSize(90, 36)
+btnNone:SetPoint("LEFT", btnAll, "RIGHT", 8, 0)
+btnNone:SetText("None")
+
 local btnSend = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnSend:SetSize(160, 36)
-btnSend:SetPoint("BOTTOMLEFT", 18, 15)
+btnSend:SetPoint("LEFT", btnNone, "RIGHT", 8, 0)
 btnSend:SetText("Send Whispers")
 btnSend:SetNormalFontObject("GameFontNormalLarge")
 
 local btnThankAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnThankAll:SetSize(160, 36)
+btnThankAll:SetSize(140, 36)
 btnThankAll:SetPoint("LEFT", btnSend, "RIGHT", 8, 0)
 btnThankAll:SetText("Thank All")
 
 local btnSettings = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnSettings:SetSize(120, 36)
-btnSettings:SetPoint("LEFT", btnThankAll, "RIGHT", 8, 0)
+btnSettings:SetPoint("BOTTOMRIGHT", -128, 15)
 btnSettings:SetText("Settings")
 btnSettings:SetScript("OnClick", function()
     if SSW.ShowSettings then SSW.ShowSettings() end
@@ -563,26 +573,88 @@ end)
 
 function SSW.UI.SetSendUIEnabled(enabled)
     btnSend:SetEnabled(enabled)
+    btnAll:SetEnabled(enabled)
+    btnNone:SetEnabled(enabled)
     btnThankAll:SetEnabled(enabled)
+    btnClose:SetEnabled(enabled)
+    btnSend:SetAlpha(enabled and 1 or 0.35)
+    btnAll:SetAlpha(enabled and 1 or 0.35)
+    btnNone:SetAlpha(enabled and 1 or 0.35)
+    btnThankAll:SetAlpha(enabled and 1 or 0.35)
+    btnClose:SetAlpha(enabled and 1 or 0.35)
+
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r and r:IsShown() then
+            r.cbMain:SetEnabled(enabled)
+            r.cbMain:SetAlpha(enabled and 1 or 0.35)
+            local subsEnabled = enabled and r.cbMain:GetChecked()
+            r.cbName:SetEnabled(subsEnabled)
+            r.cbBnet:SetEnabled(subsEnabled)
+            r.cbName:SetAlpha(subsEnabled and 1 or 0.25)
+            r.cbBnet:SetAlpha(subsEnabled and 1 or 0.25)
+        end
+    end
 end
+
+-- All button handler
+btnAll:SetScript("OnClick", function()
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r:IsShown() then
+            r.cbMain:SetChecked(true)
+            r:SetEnabledSubs(true)
+            if SSW.UI.UpdateRowPreview then SSW.UI.UpdateRowPreview(r) end
+        end
+    end
+end)
+
+-- None button handler
+btnNone:SetScript("OnClick", function()
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r:IsShown() then
+            r.cbMain:SetChecked(false)
+            r:SetEnabledSubs(false)
+            if r.preview then r.preview:SetText("") end
+        end
+    end
+end)
 
 -- Thank all button handler
 btnThankAll:SetScript("OnClick", function()
-    if not IsInGroup() then
-        SSW.Print("Not in a group.")
-        return
+    -- Randomly select one of the MSG1_PRESETS (excluding "Random" and custom messages)
+    -- Build list of preset indices in the combined list
+    local combinedList = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+    local presetIndices = {}
+    
+    -- Only include indices that correspond to non-Random MSG1_PRESETS
+    for idx = 1, #SSW.MSG1_PRESETS do
+        local preset = SSW.MSG1_PRESETS[idx]
+        if type(preset) == "string" and preset ~= "Random" then
+            table.insert(presetIndices, idx)
+        end
     end
     
-    local thanks = {
-        "Thanks for the games everyone!",
-        "GG all, thanks!",
-        "Thanks team, good games!",
-        "Appreciate the games, ty!",
-    }
+    local selectedIdx = 1
+    if #presetIndices > 0 then
+        selectedIdx = presetIndices[math.random(1, #presetIndices)]
+    end
     
-    local msg = thanks[math.random(1, #thanks)]
-    SendChatMessage(msg, "PARTY")
-    SSW.Print("Sent to party: " .. msg)
+    -- Select all visible rows and set their message to the randomly selected preset
+    for i = 1, SSW.MAX_ROWS do
+        local r = rows[i]
+        if r:IsShown() then
+            r.cbMain:SetChecked(true)
+            r:SetEnabledSubs(true)
+            r.msg1Index = selectedIdx
+            UIDropDownMenu_SetSelectedID(r.dropdown, selectedIdx)
+            if selectedIdx >= 1 and selectedIdx <= #combinedList then
+                UIDropDownMenu_SetText(r.dropdown, combinedList[selectedIdx])
+            end
+            if SSW.UI.UpdateRowPreview then SSW.UI.UpdateRowPreview(r) end
+        end
+    end
 end)
 
 -- =========================================
