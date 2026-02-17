@@ -81,12 +81,12 @@ h1:SetTextColor(1, 0.82, 0, 1)
 
 local h2 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h2:SetPoint("LEFT", 268, 0)
-h2:SetText("BNet")
+h2:SetText("2nd Msg")
 h2:SetTextColor(1, 0.82, 0, 1)
 
 local h3 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h3:SetPoint("LEFT", 328, 0)
-h3:SetText("Ignore")
+h3:SetText("Auto-Ignore")
 h3:SetTextColor(1, 0.82, 0, 1)
 
 -- Helper function to update checkbox visibility based on dropdown selection
@@ -457,6 +457,39 @@ btnSend:SetPoint("LEFT", btnNone, "RIGHT", 8, 0)
 btnSend:SetText("Send Whispers")
 btnSend:SetNormalFontObject("GameFontNormalLarge")
 
+-- Selfcheck button (check-pvp.fr for your own character)
+local btnSelfcheck = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
+btnSelfcheck:SetSize(100, 36)
+btnSelfcheck:SetPoint("LEFT", btnSend, "RIGHT", 8, 0)
+btnSelfcheck:SetText("Selfcheck")
+btnSelfcheck:SetScript("OnClick", function()
+    local playerName = UnitName("player") or "Unknown"
+    local realmName = GetRealmName() or "Unknown"
+    local fullName = playerName .. "-" .. realmName
+    local url = SSW.GetCheckPvpUrl(fullName)
+    
+    if not StaticPopupDialogs["SSW_SELFCHECK_URL"] then
+        StaticPopupDialogs["SSW_SELFCHECK_URL"] = {
+            text = "Your Check-PvP.fr URL:\n(Copy with Ctrl+C)",
+            button1 = "Close",
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            hasEditBox = true,
+            OnShow = function(self, data)
+                C_Timer.After(0.05, function()
+                    if self.editBox then
+                        self.editBox:SetText(data or "")
+                        self.editBox:HighlightText()
+                        self.editBox:SetFocus()
+                    end
+                end)
+            end,
+        }
+    end
+    StaticPopup_Show("SSW_SELFCHECK_URL", "", "", url)
+end)
+
 sendWin:SetScript("OnHide", function()
     if SSW.UnlockSnapshot then
         SSW.UnlockSnapshot()
@@ -467,9 +500,11 @@ function SSW.UI.SetSendUIEnabled(enabled)
     btnSend:SetEnabled(enabled)
     btnAll:SetEnabled(enabled)
     btnNone:SetEnabled(enabled)
+    btnSelfcheck:SetEnabled(enabled)
     btnSend:SetAlpha(enabled and 1 or 0.35)
     btnAll:SetAlpha(enabled and 1 or 0.35)
     btnNone:SetAlpha(enabled and 1 or 0.35)
+    btnSelfcheck:SetAlpha(enabled and 1 or 0.35)
 end
 
 -- All button handler
@@ -814,7 +849,7 @@ function SSW.UI.UpdateStatus(isTest)
         sendWin.subText:SetText("|cFF00FFFFSAFE|r: preview only. Use /ssw arm to enable LIVE.")
     end
 
-    sendWin.noteLine:SetText("Solo Shuffle: Optionally enable Message 2 (BTag) per player.")
+    sendWin.noteLine:SetText("Select message type (GOOD or BAD) and optionally enable 2nd message or auto-ignore. Use Selfcheck button to verify your own check-pvp.fr profile.")
 end
 
 -- =========================================
