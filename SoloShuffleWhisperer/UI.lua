@@ -256,9 +256,10 @@ local badCustLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisab
 badCustLabel:SetPoint("TOPLEFT", 18, yBadCustom)
 badCustLabel:SetWidth(400)
 badCustLabel:SetJustifyH("LEFT")
-badCustLabel:SetText("Write your own BAD messages below (only visible when BAD MODE enabled).\nPlaceholders: {name}, {role}, {spec}")
+badCustLabel:SetText("Write your own BAD messages below (only visible when BAD MODE enabled).\nPlaceholders: {role}, {spec}")
 
 local customBadBoxes = {}
+local customBadNumLabels = {}
 for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
     local boxY = yBadCustom - 32 - ((ci - 1) * (CUSTOM_BOX_H + CUSTOM_GAP))
     local numLbl = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -283,6 +284,7 @@ for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
     end)
     
     customBadBoxes[ci] = box
+    customBadNumLabels[ci] = numLbl
     
     -- Hide by default (only show when BAD MODE enabled)
     numLbl:Hide()
@@ -291,6 +293,7 @@ end
 
 -- Store references for showing/hiding
 scrollChild.customBadBoxes = customBadBoxes
+scrollChild.customBadNumLabels = customBadNumLabels
 scrollChild.badCustLabel = badCustLabel
 scrollChild.yBadCustomAfter = yBadCustom - 32 - (SSW.MAX_CUSTOM_BAD_LINES * (CUSTOM_BOX_H + CUSTOM_GAP))
 
@@ -300,22 +303,12 @@ local function UpdateBadCustomBoxesVisibility()
     badCustLabel:SetShown(enabled)
     for ci = 1, SSW.MAX_CUSTOM_BAD_LINES do
         local box = customBadBoxes[ci]
-        local numLbl = _G["SSW_CustomBadBox" .. ci]:GetParent():CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        local numLbl = customBadNumLabels[ci]
         if box then
             box:SetShown(enabled)
         end
-        -- Also hide/show number labels
-        for _, region in pairs({scrollChild:GetRegions()}) do
-            if region:GetObjectType() == "FontString" and region:GetText() == tostring(ci) .. "." then
-                local parent = region:GetParent()
-                if parent == scrollChild then
-                    -- Check if this is for bad boxes by position
-                    local _, _, _, _, yPos = region:GetPoint()
-                    if yPos and yPos < yBadCustom and yPos > yBadCustom - 300 then
-                        region:SetShown(enabled)
-                    end
-                end
-            end
+        if numLbl then
+            numLbl:SetShown(enabled)
         end
     end
 end
@@ -402,9 +395,15 @@ local dd2 = MakeDropdown(scrollChild, "SSW_DD2", 360, SSW.MSG2_PRESETS, function
 end)
 dd2:SetPoint("TOPLEFT", section2, "TOPLEFT", -2, -32)
 
--- Set scroll child height to fit all content
-local totalHeight = math.abs(yBehav - 210) + 80  -- Calculate total content height (adjusted)
-scrollChild:SetHeight(totalHeight)
+-- Calculate scroll child height dynamically
+-- Base height is from top to just after behavior section
+local baseHeight = math.abs(yBehav - 210) + 80
+-- If BAD MODE is enabled, add height for custom BAD boxes
+if SSW_Config and SSW_Config.badModeEnabled and scrollChild.yBadCustomAfter then
+    local badSectionHeight = math.abs(scrollChild.yBadCustomAfter - yBehav + 210)
+    baseHeight = baseHeight + badSectionHeight + 50  -- Extra padding
+end
+scrollChild:SetHeight(baseHeight)
 
 configWin:SetScript("OnShow", function()
     cbAutoGreet:SetChecked(SSW_Config and SSW_Config.autoGreetEnabled)
