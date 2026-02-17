@@ -62,20 +62,12 @@ local function CreateButton()
     btn.border:SetSize(54, 54)
     btn.border:SetPoint("TOPLEFT")
 
-    -- Icon (bigger) + circular mask so it stays inside the circle
+    -- Icon positioned outside and above the circular border
     btn.icon = btn:CreateTexture(nil, "ARTWORK")
     btn.icon:SetTexture(ICON_TEX)
     btn.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    btn.icon:SetPoint("CENTER", 0, 0)
-    btn.icon:SetSize(20, 20)
-
-    -- Mask the icon to a circle (built-in texture)
-    btn.mask = btn:CreateMaskTexture()
-    btn.mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-    btn.mask:SetPoint("CENTER", btn, "CENTER", 0, 0)
-    btn.mask:SetSize(22, 22)
-
-    btn.icon:AddMaskTexture(btn.mask)
+    btn.icon:SetPoint("CENTER", 0, -2)  -- Moved up slightly from center
+    btn.icon:SetSize(24, 24)  -- Slightly larger since it's not masked
 
     btn:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 
