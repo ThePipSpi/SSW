@@ -56,7 +56,7 @@ local custLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisableS
 custLabel:SetPoint("TOPLEFT", 18, y)
 custLabel:SetWidth(400)
 custLabel:SetJustifyH("LEFT")
-custLabel:SetText("Write your own messages below. They appear in the send window message dropdown but are never picked by \"Random\".\nPlaceholders: {name}, {praise}, {role}, {spec}, {btag}")
+custLabel:SetText("Write your own messages below. They appear in the send window message dropdown but are never picked by \"Random\".\nPlaceholders: {praise}, {role}, {spec}, {btag}")
 
 local CUSTOM_BOX_H = 22
 local CUSTOM_GAP   = 4
@@ -98,7 +98,7 @@ local badCustLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontDisab
 badCustLabel:SetPoint("TOPLEFT", 18, yBadCustom)
 badCustLabel:SetWidth(400)
 badCustLabel:SetJustifyH("LEFT")
-badCustLabel:SetText("Write your own BAD messages below (only visible when BAD MODE enabled).\nPlaceholders: {role}, {spec}")
+badCustLabel:SetText("Write your own BAD messages below (only visible when BAD MODE enabled).\nPlaceholders: {praise}, {role}, {spec}, {btag}")
 
 local customBadBoxes = {}
 local customBadNumLabels = {}
