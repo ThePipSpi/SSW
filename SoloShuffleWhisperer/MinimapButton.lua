@@ -32,8 +32,8 @@ local function SetAngle(btn, angle)
     cfg.minimap.angle = angle
 
     local rad = math.rad(angle)
-    local x = math.cos(rad) * 90
-    local y = math.sin(rad) * 90
+    local x = math.cos(rad) * 80  -- Reduced from 90 to better center on minimap border
+    local y = math.sin(rad) * 80
 
     -- IMPORTANT: prevent anchor-family errors
     btn:ClearAllPoints()
