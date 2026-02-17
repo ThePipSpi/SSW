@@ -418,35 +418,28 @@ for i = 1, SSW.MAX_ROWS do
     r.text:SetWidth(210)
     r.text:SetJustifyH("LEFT")
     
-    -- PvP Check Button (clickable icon)
-    r.pvpBtn = CreateFrame("Button", nil, r)
-    r.pvpBtn:SetSize(20, 20)  -- Increased from 16x16 to 20x20 for easier clicking
-    r.pvpBtn:SetPoint("LEFT", r.text, "RIGHT", 4, 0)
-    r.pvpBtn:SetHighlightTexture("Interface\\BUTTONS\\UI-Common-MouseHilight")
+    -- Clickable name overlay button to open check-pvp.fr URL
+    r.nameBtn = CreateFrame("Button", nil, r)
+    r.nameBtn:SetPoint("TOPLEFT", r.text, "TOPLEFT", 0, 0)
+    r.nameBtn:SetPoint("BOTTOMRIGHT", r.text, "BOTTOMRIGHT", 0, 0)
+    r.nameBtn:SetHighlightTexture("Interface\\BUTTONS\\UI-Common-MouseHilight")
+    r.nameBtn:GetHighlightTexture():SetAlpha(0.3)
     
-    -- Create a custom icon using texture
-    r.pvpBtn.icon = r.pvpBtn:CreateTexture(nil, "ARTWORK")
-    r.pvpBtn.icon:SetAllPoints()
-    r.pvpBtn.icon:SetTexture("Interface\\PVPFrame\\Icons\\PVP-Banner-Emblem-1")
-    r.pvpBtn.icon:SetVertexColor(0.8, 0.6, 1)
-    
-    r.pvpBtn:SetScript("OnEnter", function(self)
+    r.nameBtn:SetScript("OnEnter", function(self)
         if r.pvpUrl and r.pvpUrl ~= "" then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Check PvP Profile", 1, 1, 1)
-            GameTooltip:AddLine(r.pvpUrl, 0.5, 0.7, 1)
-            GameTooltip:AddLine("Click to copy URL", 0.7, 0.7, 0.7)
+            GameTooltip:SetText("Click to open check-pvp.fr", 1, 1, 1)
+            GameTooltip:AddLine("View this player's profile", 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end
     end)
     
-    r.pvpBtn:SetScript("OnLeave", function(self)
+    r.nameBtn:SetScript("OnLeave", function(self)
         GameTooltip:Hide()
     end)
     
-    r.pvpBtn:SetScript("OnClick", function(self)
+    r.nameBtn:SetScript("OnClick", function(self)
         if r.pvpUrl and r.pvpUrl ~= "" then
-            -- Store URL in local variable to avoid closure issues
             local urlToCopy = r.pvpUrl
             
             -- Create a copy-paste dialog
@@ -476,6 +469,40 @@ for i = 1, SSW.MAX_ROWS do
             end
             StaticPopup_Show("SSW_COPY_URL", nil, nil, urlToCopy)
         end
+    end)
+    
+    r.nameBtn:Hide() -- Hidden by default, shown when player is set
+    
+    -- PvP Check Button (info icon with tooltip)
+    r.pvpBtn = CreateFrame("Button", nil, r)
+    r.pvpBtn:SetSize(20, 20)  -- Increased from 16x16 to 20x20 for easier clicking
+    r.pvpBtn:SetPoint("LEFT", r.text, "RIGHT", 4, 0)
+    r.pvpBtn:SetHighlightTexture("Interface\\BUTTONS\\UI-Common-MouseHilight")
+    
+    -- Create a custom icon using texture
+    r.pvpBtn.icon = r.pvpBtn:CreateTexture(nil, "ARTWORK")
+    r.pvpBtn.icon:SetAllPoints()
+    r.pvpBtn.icon:SetTexture("Interface\\PVPFrame\\Icons\\PVP-Banner-Emblem-1")
+    r.pvpBtn.icon:SetVertexColor(0.8, 0.6, 1)
+    
+    r.pvpBtn:SetScript("OnEnter", function(self)
+        if r.pvpUrl and r.pvpUrl ~= "" then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Check PvP Profile", 1, 1, 1)
+            GameTooltip:AddLine(" ", 1, 1, 1)
+            GameTooltip:AddLine("Key Information:", 0.8, 0.8, 0.8)
+            GameTooltip:AddLine("• Current & Best CR", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine("• Season Performance", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine("• Alt Characters", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine("• Achievement History", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(" ", 1, 1, 1)
+            GameTooltip:AddLine("Click player name to open", 0.5, 0.7, 1)
+            GameTooltip:Show()
+        end
+    end)
+    
+    r.pvpBtn:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
     end)
     
     r.pvpBtn:Hide() -- Hidden by default, shown when player is set
@@ -826,6 +853,7 @@ local function ResetRows()
         r:SetEnabledSubs(false)
         if r.preview then r.preview:SetText("") end
         if r.pvpBtn then r.pvpBtn:Hide() end
+        if r.nameBtn then r.nameBtn:Hide() end
     end
 end
 
@@ -852,11 +880,14 @@ local function PopulateFromSnapshot()
 
         r.text:SetText(roleIcon .. icon .. "|c" .. colorStr .. clean .. "|r |cffaaaaaa(" .. RoleText(m.role or "DAMAGER") .. ")|r")
         
-        -- Set up PvP check button
+        -- Set up PvP check button and clickable name
         if SSW.GetCheckPvpUrl then
             r.pvpUrl = SSW.GetCheckPvpUrl(m.fullName)
             if r.pvpBtn then
                 r.pvpBtn:Show()
+            end
+            if r.nameBtn then
+                r.nameBtn:Show()
             end
         end
         
