@@ -415,8 +415,63 @@ for i = 1, SSW.MAX_ROWS do
     -- Player name e icone (in alto)
     r.text = r:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     r.text:SetPoint("TOPLEFT", 8, -8)
-    r.text:SetWidth(250)
+    r.text:SetWidth(210)
     r.text:SetJustifyH("LEFT")
+    
+    -- PvP Check Button (clickable icon)
+    r.pvpBtn = CreateFrame("Button", nil, r)
+    r.pvpBtn:SetSize(16, 16)
+    r.pvpBtn:SetPoint("LEFT", r.text, "RIGHT", 2, 0)
+    r.pvpBtn:SetNormalTexture("Interface\\MINIMAP\\TRACKING\\None")
+    r.pvpBtn:SetHighlightTexture("Interface\\BUTTONS\\UI-Common-MouseHilight")
+    
+    -- Create a custom icon using texture
+    r.pvpBtn.icon = r.pvpBtn:CreateTexture(nil, "ARTWORK")
+    r.pvpBtn.icon:SetAllPoints()
+    r.pvpBtn.icon:SetTexture("Interface\\PVPFrame\\Icons\\PVP-Banner-Emblem-1")
+    r.pvpBtn.icon:SetVertexColor(0.8, 0.6, 1)
+    
+    r.pvpBtn:SetScript("OnEnter", function(self)
+        if r.pvpUrl and r.pvpUrl ~= "" then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Check PvP Profile", 1, 1, 1)
+            GameTooltip:AddLine(r.pvpUrl, 0.5, 0.7, 1)
+            GameTooltip:AddLine(" ", 1, 1, 1)
+            GameTooltip:AddLine("Click to copy URL", 0.7, 0.7, 0.7)
+            GameTooltip:Show()
+        end
+    end)
+    
+    r.pvpBtn:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
+    
+    r.pvpBtn:SetScript("OnClick", function(self)
+        if r.pvpUrl and r.pvpUrl ~= "" then
+            -- Create a copy-paste dialog
+            if not StaticPopupDialogs["SSW_COPY_URL"] then
+                StaticPopupDialogs["SSW_COPY_URL"] = {
+                    text = "Copy this URL (Ctrl+C):",
+                    button1 = "Close",
+                    timeout = 0,
+                    whileDead = true,
+                    hideOnEscape = true,
+                    hasEditBox = true,
+                    OnShow = function(self)
+                        self.editBox:SetText(r.pvpUrl)
+                        self.editBox:HighlightText()
+                        self.editBox:SetFocus()
+                    end,
+                    EditBoxOnEscapePressed = function(self)
+                        self:GetParent():Hide()
+                    end,
+                }
+            end
+            StaticPopup_Show("SSW_COPY_URL")
+        end
+    end)
+    
+    r.pvpBtn:Hide() -- Hidden by default, shown when player is set
 
     -- Checkbox "Send" (allineata)
     r.cbMain = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
@@ -756,12 +811,14 @@ local function ResetRows()
         r.specID     = nil
         r.role       = nil
         r.msg1Index  = 1
+        r.pvpUrl     = nil
         r:Hide()
         r.cbMain:SetChecked(false)
         r.cbName:SetChecked(false)
         r.cbBnet:SetChecked(false)
         r:SetEnabledSubs(false)
         if r.preview then r.preview:SetText("") end
+        if r.pvpBtn then r.pvpBtn:Hide() end
     end
 end
 
@@ -787,6 +844,15 @@ local function PopulateFromSnapshot()
         local colorStr = GetClassColorStr(m.classFile)
 
         r.text:SetText(roleIcon .. icon .. "|c" .. colorStr .. clean .. "|r |cffaaaaaa(" .. RoleText(m.role or "DAMAGER") .. ")|r")
+        
+        -- Set up PvP check button
+        if SSW.GetCheckPvpUrl then
+            r.pvpUrl = SSW.GetCheckPvpUrl(m.fullName)
+            if r.pvpBtn then
+                r.pvpBtn:Show()
+            end
+        end
+        
         r:Show()
         idx = idx + 1
     end

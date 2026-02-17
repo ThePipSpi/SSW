@@ -37,6 +37,29 @@ function SSW.CleanName(fullName)
     return (tostring(fullName):gsub("%-.+", ""))
 end
 
+function SSW.GetRealm(fullName)
+    if not fullName then return "" end
+    local realm = tostring(fullName):match("%-(.+)")
+    return realm or ""
+end
+
+function SSW.GetCheckPvpUrl(fullName)
+    if not fullName or fullName == "" then return "" end
+    local name = SSW.CleanName(fullName)
+    local realm = SSW.GetRealm(fullName)
+    
+    -- If no realm in fullName, try to get current realm
+    if realm == "" then
+        realm = GetRealmName and GetRealmName() or ""
+    end
+    
+    -- Convert realm name to URL-friendly format (lowercase, spaces to hyphens)
+    realm = realm:lower():gsub("%s+", "-")
+    name = name:lower()
+    
+    return ("https://check-pvp.fr/eu/%s/%s"):format(realm, name)
+end
+
 function SSW.GetMyBattleTag()
     local success, _, btag = pcall(function() 
         if BNGetInfo then
