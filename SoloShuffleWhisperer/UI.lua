@@ -422,7 +422,6 @@ for i = 1, SSW.MAX_ROWS do
     r.pvpBtn = CreateFrame("Button", nil, r)
     r.pvpBtn:SetSize(16, 16)
     r.pvpBtn:SetPoint("LEFT", r.text, "RIGHT", 2, 0)
-    r.pvpBtn:SetNormalTexture("Interface\\MINIMAP\\TRACKING\\None")
     r.pvpBtn:SetHighlightTexture("Interface\\BUTTONS\\UI-Common-MouseHilight")
     
     -- Create a custom icon using texture
@@ -436,7 +435,6 @@ for i = 1, SSW.MAX_ROWS do
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText("Check PvP Profile", 1, 1, 1)
             GameTooltip:AddLine(r.pvpUrl, 0.5, 0.7, 1)
-            GameTooltip:AddLine(" ", 1, 1, 1)
             GameTooltip:AddLine("Click to copy URL", 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end
@@ -448,6 +446,9 @@ for i = 1, SSW.MAX_ROWS do
     
     r.pvpBtn:SetScript("OnClick", function(self)
         if r.pvpUrl and r.pvpUrl ~= "" then
+            -- Store URL in local variable to avoid closure issues
+            local urlToCopy = r.pvpUrl
+            
             -- Create a copy-paste dialog
             if not StaticPopupDialogs["SSW_COPY_URL"] then
                 StaticPopupDialogs["SSW_COPY_URL"] = {
@@ -457,8 +458,8 @@ for i = 1, SSW.MAX_ROWS do
                     whileDead = true,
                     hideOnEscape = true,
                     hasEditBox = true,
-                    OnShow = function(self)
-                        self.editBox:SetText(r.pvpUrl)
+                    OnShow = function(self, data)
+                        self.editBox:SetText(data)
                         self.editBox:HighlightText()
                         self.editBox:SetFocus()
                     end,
@@ -467,7 +468,7 @@ for i = 1, SSW.MAX_ROWS do
                     end,
                 }
             end
-            StaticPopup_Show("SSW_COPY_URL")
+            StaticPopup_Show("SSW_COPY_URL", nil, nil, urlToCopy)
         end
     end)
     
