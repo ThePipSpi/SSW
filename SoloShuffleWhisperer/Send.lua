@@ -37,15 +37,55 @@ end
 
 -- Main send function
 local function ProcessWhispers(isTest)
-    queue = {}
-    local selected = 0
-
     if not SSW.UI or not SSW.UI.rows then
         SSW.Print("UI not ready.")
         return
     end
 
     local rows = SSW.UI.rows
+    
+    -- Check if any BAD messages are selected (only in LIVE mode)
+    local hasBadMessages = false
+    if not isTest and SSW.IsArmed() and SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
+        for i = 1, SSW.MAX_ROWS do
+            local r = rows[i]
+            if r and r:IsShown() and r.badMsgIndex and r.badMsgIndex > 0 then
+                hasBadMessages = true
+                break
+            end
+        end
+    end
+    
+    -- Show confirmation dialog for BAD messages
+    if hasBadMessages then
+        if not StaticPopupDialogs["SSW_CONFIRM_BAD_WHISPERS"] then
+            StaticPopupDialogs["SSW_CONFIRM_BAD_WHISPERS"] = {
+                text = "|cFFFF4040WARNING:|r You are about to send BAD whispers!\n\nSending negative messages may result in reports and could lead to account penalties or bans.\n\nAre you sure you want to proceed?",
+                button1 = "Yes, Send BAD Whispers",
+                button2 = "Cancel",
+                timeout = 0,
+                whileDead = true,
+                hideOnEscape = true,
+                preferredIndex = 3,
+                OnAccept = function()
+                    -- Call ProcessWhispers again but skip the confirmation check
+                    ProcessWhispersInternal(isTest)
+                end,
+            }
+        end
+        StaticPopup_Show("SSW_CONFIRM_BAD_WHISPERS")
+        return
+    end
+    
+    -- If no BAD messages or confirmation passed, proceed with internal processing
+    ProcessWhispersInternal(isTest)
+end
+
+-- Internal send function (called after confirmation or if no BAD messages)
+local function ProcessWhispersInternal(isTest)
+    queue = {}
+    local rows = SSW.UI.rows
+    local selected = 0
 
     -- Check anti-spam
     if not isTest and SSW.IsArmed() then

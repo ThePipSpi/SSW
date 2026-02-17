@@ -68,4 +68,6 @@ local function CreateButton()
     UpdateColor(btn)
 end
 
-CreateFrame("Frame"):RegisterEvent("PLAYER_LOGIN"):SetScript("OnEvent", CreateButton)
+local initFrame = CreateFrame("Frame")
+initFrame:RegisterEvent("PLAYER_LOGIN")
+initFrame:SetScript("OnEvent", CreateButton)

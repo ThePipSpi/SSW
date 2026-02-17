@@ -23,6 +23,8 @@ sendWin:EnableMouse(true)
 sendWin:RegisterForDrag("LeftButton")
 sendWin:SetScript("OnDragStart", sendWin.StartMoving)
 sendWin:SetScript("OnDragStop", sendWin.StopMovingOrSizing)
+sendWin:SetFrameStrata("HIGH")
+sendWin:SetFrameLevel(100)
 sendWin:Hide()
 
 SSW.UI.sendWin = sendWin
@@ -81,12 +83,12 @@ h1:SetTextColor(1, 0.82, 0, 1)
 
 local h2 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h2:SetPoint("LEFT", 268, 0)
-h2:SetText("BNet")
+h2:SetText("2nd Msg")
 h2:SetTextColor(1, 0.82, 0, 1)
 
 local h3 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h3:SetPoint("LEFT", 328, 0)
-h3:SetText("Ignore")
+h3:SetText("Auto-Ignore")
 h3:SetTextColor(1, 0.82, 0, 1)
 
 -- Helper function to update checkbox visibility based on dropdown selection
@@ -250,6 +252,13 @@ for i = 1, SSW.MAX_ROWS do
 
     -- Dropdown for GOOD messages
     r.msg1Index = nil  -- Start with blank dropdown
+    
+    -- Label for GOOD dropdown
+    r.goodLabel = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    r.goodLabel:SetPoint("TOPLEFT", 2, -22)
+    r.goodLabel:SetText("|cFF00FF00GOOD Message:|r")
+    r.goodLabel:Hide()
+    
     r.dropdown = CreateFrame("Frame", "SSW_RowDD_" .. i, r, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(r.dropdown, 280)
     r.dropdown:SetPoint("TOPLEFT", 0, -30)
@@ -311,6 +320,13 @@ for i = 1, SSW.MAX_ROWS do
 
     -- BAD MODE dropdown
     r.badMsgIndex = nil
+    
+    -- Label for BAD dropdown
+    r.badLabel = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    r.badLabel:SetPoint("TOPLEFT", 292, -22)
+    r.badLabel:SetText("|cFFFF4444BAD Message:|r")
+    r.badLabel:Hide()
+    
     r.badDropdown = CreateFrame("Frame", "SSW_RowBadDD_" .. i, r, "UIDropDownMenuTemplate")
     UIDropDownMenu_SetWidth(r.badDropdown, 280)
     r.badDropdown:SetPoint("TOPLEFT", 290, -30)
@@ -377,6 +393,7 @@ for i = 1, SSW.MAX_ROWS do
     -- Show dropdowns when row is shown
     function r:ShowDropdowns()
         r.dropdown:Show()
+        r.goodLabel:Show()
         if not r.msg1Index then
             UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
         else
@@ -391,6 +408,7 @@ for i = 1, SSW.MAX_ROWS do
         -- Show BAD dropdown if BAD MODE is enabled
         if SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() and r.badDropdown then
             r.badDropdown:Show()
+            r.badLabel:Show()
             if not r.badMsgIndex then
                 UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
             else
@@ -457,6 +475,39 @@ btnSend:SetPoint("LEFT", btnNone, "RIGHT", 8, 0)
 btnSend:SetText("Send Whispers")
 btnSend:SetNormalFontObject("GameFontNormalLarge")
 
+-- Selfcheck button (check-pvp.fr for your own character)
+local btnSelfcheck = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
+btnSelfcheck:SetSize(100, 36)
+btnSelfcheck:SetPoint("LEFT", btnSend, "RIGHT", 8, 0)
+btnSelfcheck:SetText("Selfcheck")
+btnSelfcheck:SetScript("OnClick", function()
+    local playerName = UnitName("player") or "Unknown"
+    local realmName = GetRealmName() or "Unknown"
+    local fullName = playerName .. "-" .. realmName
+    local url = SSW.GetCheckPvpUrl(fullName)
+    
+    if not StaticPopupDialogs["SSW_SELFCHECK_URL"] then
+        StaticPopupDialogs["SSW_SELFCHECK_URL"] = {
+            text = "Your Check-PvP.fr URL:\n(Copy with Ctrl+C)",
+            button1 = "Close",
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            hasEditBox = true,
+            OnShow = function(self, data)
+                C_Timer.After(0.05, function()
+                    if self.editBox then
+                        self.editBox:SetText(data or "")
+                        self.editBox:HighlightText()
+                        self.editBox:SetFocus()
+                    end
+                end)
+            end,
+        }
+    end
+    StaticPopup_Show("SSW_SELFCHECK_URL", "", "", url)
+end)
+
 sendWin:SetScript("OnHide", function()
     if SSW.UnlockSnapshot then
         SSW.UnlockSnapshot()
@@ -467,9 +518,11 @@ function SSW.UI.SetSendUIEnabled(enabled)
     btnSend:SetEnabled(enabled)
     btnAll:SetEnabled(enabled)
     btnNone:SetEnabled(enabled)
+    btnSelfcheck:SetEnabled(enabled)
     btnSend:SetAlpha(enabled and 1 or 0.35)
     btnAll:SetAlpha(enabled and 1 or 0.35)
     btnNone:SetAlpha(enabled and 1 or 0.35)
+    btnSelfcheck:SetAlpha(enabled and 1 or 0.35)
 end
 
 -- All button handler
@@ -556,11 +609,11 @@ function SSW.UI.UpdateRowPreview(r)
                 :gsub("{spec}", r.specName or "")
             
             if r.preview then
-                local ignoreText = ""
+                local ignoreSuffix = ""
                 if r.cbIgnore and r.cbIgnore:GetChecked() then
-                    ignoreText = " (player will be ignored)"
+                    ignoreSuffix = " |cFFFF8800(will auto-ignore)|r"
                 end
-                r.preview:SetText("|cFFFF4444[BAD]|r Preview: " .. badMsg .. ignoreText)
+                r.preview:SetText("|cFFFF4444[BAD MESSAGE]|r " .. badMsg .. ignoreSuffix)
             end
         end
         return
@@ -584,10 +637,10 @@ function SSW.UI.UpdateRowPreview(r)
         )
 
         local line = msg1
-        if includeSecond and msg2 ~= "" then line = line .. " | " .. msg2 end
+        if includeSecond and msg2 ~= "" then line = line .. " |cFF00FF00+|r " .. msg2 end
 
         if r.preview then 
-            r.preview:SetText("Preview: " .. line)
+            r.preview:SetText("|cFF00FF00[GOOD MESSAGE]|r " .. line)
         end
         return
     end
@@ -754,6 +807,8 @@ local function ResetRows()
         if r.preview then r.preview:SetText("") end
         if r.pvpBtn then r.pvpBtn:Hide() end
         if r.nameBtn then r.nameBtn:Hide() end
+        if r.goodLabel then r.goodLabel:Hide() end
+        if r.badLabel then r.badLabel:Hide() end
     end
 end
 
@@ -807,14 +862,14 @@ function SSW.UI.UpdateStatus(isTest)
     sendWin.statusText:SetText("Mode: " .. SSW.ModeText(isTest))
 
     if isTest then
-        sendWin.subText:SetText("|cFFFFFF00TEST|r: preview only. Select players and press Send.")
+        sendWin.subText:SetText("|cFFFFFF00TEST MODE|r - Preview only. No whispers will be sent. Select players and press Send to preview messages.")
     elseif SSW.IsArmed() then
-        sendWin.subText:SetText("|cFFFF2020LIVE|r: will whisper other players. Double-check your selection.")
+        sendWin.subText:SetText("|cFFFF2020LIVE MODE|r - Whispers WILL BE SENT to other players. Double-check your selection before sending!")
     else
-        sendWin.subText:SetText("|cFF00FFFFSAFE|r: preview only. Use /ssw arm to enable LIVE.")
+        sendWin.subText:SetText("|cFF00FFFFSAFE MODE|r - Preview only. No whispers will be sent. Use /ssw arm to enable LIVE mode.")
     end
 
-    sendWin.noteLine:SetText("Solo Shuffle: Optionally enable Message 2 (BTag) per player.")
+    sendWin.noteLine:SetText("Select message type (GOOD or BAD) and configure options. Use Selfcheck to view your check-pvp.fr profile.")
 end
 
 -- =========================================
