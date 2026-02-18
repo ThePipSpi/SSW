@@ -39,7 +39,21 @@ function SSW.SnapshotScoreboard()
     local myName = UnitName("player")
     
     for i = 1, numScores do
-        local name, _, _, _, _, _, _, _, _, classFile, _, _, _, _, _, specName = GetBattlefieldScore(i)
+        local name, classFile, specName
+        
+        -- Use C_PvP.GetScoreInfo for WoW 11.0+ (The War Within)
+        if C_PvP and C_PvP.GetScoreInfo then
+            local scoreInfo = C_PvP.GetScoreInfo(i)
+            if scoreInfo then
+                name = scoreInfo.name
+                classFile = scoreInfo.classToken
+                specName = scoreInfo.talentSpec
+            end
+        else
+            -- Fallback to deprecated GetBattlefieldScore for older versions
+            name, _, _, _, _, _, _, _, _, classFile, _, _, _, _, _, specName = GetBattlefieldScore(i)
+        end
+        
         if name and name ~= myName then
             local specID, role = GetSpecInfo(specName)
             
