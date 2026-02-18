@@ -11,6 +11,10 @@ local RoleIconTag = SSW.UI.RoleIconTag
 local RoleText = SSW.UI.RoleText
 local GetClassColorStr = SSW.UI.GetClassColorStr
 
+-- Layout constants
+local CHECKBOX_INLINE_X = 150  -- Horizontal position for inline checkboxes after dropdown
+local CHECKBOX_Y = -39         -- Vertical position for inline checkboxes
+
 -- =========================================
 -- SEND WINDOW
 -- =========================================
@@ -83,28 +87,29 @@ h1:SetTextColor(1, 0.82, 0, 1)
 
 local h2 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 h2:SetPoint("LEFT", 268, 0)
-h2:SetText("2nd Msg")
+h2:SetText("Message")
 h2:SetTextColor(1, 0.82, 0, 1)
-
-local h3 = headerBg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-h3:SetPoint("LEFT", 328, 0)
-h3:SetText("Auto-Ignore")
-h3:SetTextColor(1, 0.82, 0, 1)
 
 -- Helper function to update checkbox visibility based on dropdown selection
 local function UpdateCheckboxVisibility(r)
     -- Show BNet checkbox only when GOOD message is selected
     if r.msg1Index and r.msg1Index > 0 then
         r.cbBnet:Show()
+        if r.cbBnetLabel then r.cbBnetLabel:Show() end
         r.cbIgnore:Hide()
+        if r.cbIgnoreLabel then r.cbIgnoreLabel:Hide() end
     -- Show Ignore checkbox only when BAD message is selected
     elseif r.badMsgIndex and r.badMsgIndex > 0 then
         r.cbBnet:Hide()
+        if r.cbBnetLabel then r.cbBnetLabel:Hide() end
         r.cbIgnore:Show()
+        if r.cbIgnoreLabel then r.cbIgnoreLabel:Show() end
     -- Hide both when no message is selected
     else
         r.cbBnet:Hide()
+        if r.cbBnetLabel then r.cbBnetLabel:Hide() end
         r.cbIgnore:Hide()
+        if r.cbIgnoreLabel then r.cbIgnoreLabel:Hide() end
     end
 end
 
@@ -227,19 +232,31 @@ for i = 1, SSW.MAX_ROWS do
     
     r.pvpBtn:Hide()
 
-    -- Checkbox "+ BNet" (only shown when GOOD message selected)
+    -- Checkbox "+ BNet" (only shown when GOOD message selected, inline after dropdown)
     r.cbBnet = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBnet:SetSize(26, 26)
-    r.cbBnet:SetPoint("TOPLEFT", 268, -6)
+    r.cbBnet:SetPoint("TOPLEFT", CHECKBOX_INLINE_X, CHECKBOX_Y)
     r.cbBnet:SetEnabled(true)
     r.cbBnet:Hide()  -- Hidden by default, shown when GOOD message selected
     
-    -- Checkbox "Ignore" (only shown when BAD message selected)
+    -- Label for BNet checkbox
+    r.cbBnetLabel = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    r.cbBnetLabel:SetPoint("LEFT", r.cbBnet, "RIGHT", 2, 0)
+    r.cbBnetLabel:SetText("+BNet")
+    r.cbBnetLabel:Hide()
+    
+    -- Checkbox "Ignore" (only shown when BAD message selected, inline after dropdown)
     r.cbIgnore = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbIgnore:SetSize(26, 26)
-    r.cbIgnore:SetPoint("TOPLEFT", 328, -6)
+    r.cbIgnore:SetPoint("TOPLEFT", CHECKBOX_INLINE_X, CHECKBOX_Y)
     r.cbIgnore:SetEnabled(true)
     r.cbIgnore:Hide()  -- Hidden by default, shown when BAD message selected
+    
+    -- Label for Ignore checkbox
+    r.cbIgnoreLabel = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    r.cbIgnoreLabel:SetPoint("LEFT", r.cbIgnore, "RIGHT", 2, 0)
+    r.cbIgnoreLabel:SetText("Ignore")
+    r.cbIgnoreLabel:Hide()
     
     r.cbIgnore:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -250,100 +267,29 @@ for i = 1, SSW.MAX_ROWS do
         GameTooltip:Hide()
     end)
 
-    -- Dropdown for GOOD messages
-    r.msg1Index = nil  -- Start with blank dropdown
-    
-    -- Label for GOOD dropdown
-    r.goodLabel = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    r.goodLabel:SetPoint("TOPLEFT", 2, -28)
-    r.goodLabel:SetText("|cFF00FF00GOOD Message:|r")
-    r.goodLabel:Hide()
+    -- Unified dropdown for all messages
+    r.msg1Index = nil  -- Index for GOOD messages
+    r.badMsgIndex = nil  -- Index for BAD messages
     
     r.dropdown = CreateFrame("Frame", "SSW_RowDD_" .. i, r, "UIDropDownMenuTemplate")
-    UIDropDownMenu_SetWidth(r.dropdown, 140)
+    UIDropDownMenu_SetWidth(r.dropdown, 180)
     r.dropdown:SetPoint("TOPLEFT", 0, -36)
     r.dropdown:SetScale(0.9)
-    UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
+    UIDropDownMenu_SetText(r.dropdown, "Choose one...")
     r.dropdown:Hide()
 
     UIDropDownMenu_Initialize(r.dropdown, function(self, level)
-        local selectedIdx = r.msg1Index
         local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
-        
-        -- Add "None" option at the top to allow deselection
-        local info = UIDropDownMenu_CreateInfo()
-        info.text = "-- None --"
-        info.checked = (selectedIdx == nil)
-        info.func = function()
-            r.msg1Index = nil
-            UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
-            -- Update checkbox visibility (hide both)
-            UpdateCheckboxVisibility(r)
-            if SSW.UI.UpdateRowPreview then
-                SSW.UI.UpdateRowPreview(r)
-            end
-        end
-        UIDropDownMenu_AddButton(info, level)
-        
-        -- Add separator
-        local separator = UIDropDownMenu_CreateInfo()
-        separator.text = ""
-        separator.isTitle = true
-        separator.notCheckable = true
-        UIDropDownMenu_AddButton(separator, level)
-        
-        -- Add actual messages
-        for idx, txt in ipairs(msg1List) do
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = txt
-            info.checked = (idx == selectedIdx)
-            info.func = function()
-                r.msg1Index = idx
-                UIDropDownMenu_SetSelectedID(r.dropdown, idx)
-                UIDropDownMenu_SetText(r.dropdown, txt)
-                -- Reset BAD dropdown selection when GOOD is chosen
-                r.badMsgIndex = nil
-                if r.badDropdown then
-                    UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
-                end
-                -- Update checkbox visibility
-                UpdateCheckboxVisibility(r)
-                if SSW.UI.UpdateRowPreview then
-                    SSW.UI.UpdateRowPreview(r)
-                end
-            end
-            UIDropDownMenu_AddButton(info, level)
-        end
-    end)
-
-    -- BAD MODE dropdown
-    r.badMsgIndex = nil
-    
-    -- Label for BAD dropdown
-    r.badLabel = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    r.badLabel:SetPoint("TOPLEFT", 292, -28)
-    r.badLabel:SetText("|cFFFF4444BAD Message:|r")
-    r.badLabel:Hide()
-    
-    r.badDropdown = CreateFrame("Frame", "SSW_RowBadDD_" .. i, r, "UIDropDownMenuTemplate")
-    UIDropDownMenu_SetWidth(r.badDropdown, 140)
-    r.badDropdown:SetPoint("TOPLEFT", 290, -36)
-    r.badDropdown:SetScale(0.9)
-    UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
-    r.badDropdown:Hide()
-
-    UIDropDownMenu_Initialize(r.badDropdown, function(self, level)
-        local selectedIdx = r.badMsgIndex
         local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
         
         -- Add "None" option at the top to allow deselection
         local info = UIDropDownMenu_CreateInfo()
         info.text = "-- None --"
-        info.checked = (selectedIdx == nil)
+        info.checked = (r.msg1Index == nil and r.badMsgIndex == nil)
         info.func = function()
+            r.msg1Index = nil
             r.badMsgIndex = nil
-            UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
-            -- Update checkbox visibility (hide both)
+            UIDropDownMenu_SetText(r.dropdown, "Choose one...")
             UpdateCheckboxVisibility(r)
             if SSW.UI.UpdateRowPreview then
                 SSW.UI.UpdateRowPreview(r)
@@ -358,19 +304,15 @@ for i = 1, SSW.MAX_ROWS do
         separator.notCheckable = true
         UIDropDownMenu_AddButton(separator, level)
         
-        -- Add actual messages
-        for idx, txt in ipairs(badList) do
+        -- Add GOOD messages
+        for idx, txt in ipairs(msg1List) do
             local info = UIDropDownMenu_CreateInfo()
             info.text = txt
-            info.checked = (idx == selectedIdx)
+            info.checked = (idx == r.msg1Index)
             info.func = function()
-                r.badMsgIndex = idx
-                UIDropDownMenu_SetSelectedID(r.badDropdown, idx)
-                UIDropDownMenu_SetText(r.badDropdown, txt)
-                -- Reset GOOD dropdown selection when BAD is chosen
-                r.msg1Index = nil
-                UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
-                -- Update checkbox visibility
+                r.msg1Index = idx
+                r.badMsgIndex = nil  -- Only one can be selected at a time
+                UIDropDownMenu_SetText(r.dropdown, txt)
                 UpdateCheckboxVisibility(r)
                 if SSW.UI.UpdateRowPreview then
                     SSW.UI.UpdateRowPreview(r)
@@ -378,41 +320,51 @@ for i = 1, SSW.MAX_ROWS do
             end
             UIDropDownMenu_AddButton(info, level)
         end
+        
+        -- Add separator before BAD messages if BAD mode is enabled
+        if SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() and #badList > 0 then
+            local separator = UIDropDownMenu_CreateInfo()
+            separator.text = ""
+            separator.isTitle = true
+            separator.notCheckable = true
+            UIDropDownMenu_AddButton(separator, level)
+            
+            -- Add BAD messages
+            for idx, txt in ipairs(badList) do
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = txt
+                info.checked = (idx == r.badMsgIndex)
+                info.func = function()
+                    r.badMsgIndex = idx
+                    r.msg1Index = nil  -- Only one can be selected at a time
+                    UIDropDownMenu_SetText(r.dropdown, txt)
+                    UpdateCheckboxVisibility(r)
+                    if SSW.UI.UpdateRowPreview then
+                        SSW.UI.UpdateRowPreview(r)
+                    end
+                end
+                UIDropDownMenu_AddButton(info, level)
+            end
+        end
     end)
-
-    -- Preview
-    r.preview = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    r.preview:SetPoint("TOPLEFT", 295, -35)
-    r.preview:SetWidth(390)
-    r.preview:SetJustifyH("LEFT")
 
     -- Show dropdowns when row is shown
     function r:ShowDropdowns()
         r.dropdown:Show()
-        r.goodLabel:Show()
-        if not r.msg1Index then
-            UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
+        if not r.msg1Index and not r.badMsgIndex then
+            UIDropDownMenu_SetText(r.dropdown, "Choose one...")
         else
             local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
-            local idx = r.msg1Index
-            if idx and idx >= 1 and idx <= #msg1List then
-                UIDropDownMenu_SetSelectedID(r.dropdown, idx)
-                UIDropDownMenu_SetText(r.dropdown, msg1List[idx])
-            end
-        end
-        
-        -- Show BAD dropdown if BAD MODE is enabled
-        if SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() and r.badDropdown then
-            r.badDropdown:Show()
-            r.badLabel:Show()
-            if not r.badMsgIndex then
-                UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
-            else
-                local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
+            local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
+            if r.msg1Index then
+                local idx = r.msg1Index
+                if idx and idx >= 1 and idx <= #msg1List then
+                    UIDropDownMenu_SetText(r.dropdown, msg1List[idx])
+                end
+            elseif r.badMsgIndex then
                 local idx = r.badMsgIndex
                 if idx and idx >= 1 and idx <= #badList then
-                    UIDropDownMenu_SetSelectedID(r.badDropdown, idx)
-                    UIDropDownMenu_SetText(r.badDropdown, badList[idx])
+                    UIDropDownMenu_SetText(r.dropdown, badList[idx])
                 end
             end
         end
@@ -455,14 +407,9 @@ btnBg:SetBackdrop({
 })
 btnBg:SetBackdropColor(0.05, 0.05, 0.05, 0.6)
 
-local btnAll = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnAll:SetSize(90, 36)
-btnAll:SetPoint("BOTTOMLEFT", 18, 15)
-btnAll:SetText("All")
-
 local btnNone = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
 btnNone:SetSize(90, 36)
-btnNone:SetPoint("LEFT", btnAll, "RIGHT", 8, 0)
+btnNone:SetPoint("BOTTOMLEFT", 18, 15)
 btnNone:SetText("None")
 
 local btnSend = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
@@ -470,39 +417,6 @@ btnSend:SetSize(160, 36)
 btnSend:SetPoint("LEFT", btnNone, "RIGHT", 8, 0)
 btnSend:SetText("Send Whispers")
 btnSend:SetNormalFontObject("GameFontNormalLarge")
-
--- Selfcheck button (check-pvp.fr for your own character)
-local btnSelfcheck = CreateFrame("Button", nil, sendWin, "UIPanelButtonTemplate")
-btnSelfcheck:SetSize(100, 36)
-btnSelfcheck:SetPoint("LEFT", btnSend, "RIGHT", 8, 0)
-btnSelfcheck:SetText("Selfcheck")
-btnSelfcheck:SetScript("OnClick", function()
-    local playerName = UnitName("player") or "Unknown"
-    local realmName = GetRealmName() or "Unknown"
-    local fullName = playerName .. "-" .. realmName
-    local url = SSW.GetCheckPvpUrl(fullName)
-    
-    if not StaticPopupDialogs["SSW_SELFCHECK_URL"] then
-        StaticPopupDialogs["SSW_SELFCHECK_URL"] = {
-            text = "Your Check-PvP.fr URL:\n(Copy with Ctrl+C)",
-            button1 = "Close",
-            timeout = 0,
-            whileDead = true,
-            hideOnEscape = true,
-            hasEditBox = true,
-            OnShow = function(self, data)
-                C_Timer.After(0.05, function()
-                    if self.editBox then
-                        self.editBox:SetText(data or "")
-                        self.editBox:HighlightText()
-                        self.editBox:SetFocus()
-                    end
-                end)
-            end,
-        }
-    end
-    StaticPopup_Show("SSW_SELFCHECK_URL", "", "", url)
-end)
 
 sendWin:SetScript("OnHide", function()
     if SSW.UnlockSnapshot then
@@ -512,36 +426,10 @@ end)
 
 function SSW.UI.SetSendUIEnabled(enabled)
     btnSend:SetEnabled(enabled)
-    btnAll:SetEnabled(enabled)
     btnNone:SetEnabled(enabled)
-    btnSelfcheck:SetEnabled(enabled)
     btnSend:SetAlpha(enabled and 1 or 0.35)
-    btnAll:SetAlpha(enabled and 1 or 0.35)
     btnNone:SetAlpha(enabled and 1 or 0.35)
-    btnSelfcheck:SetAlpha(enabled and 1 or 0.35)
 end
-
--- All button handler
-btnAll:SetScript("OnClick", function()
-    for i = 1, SSW.MAX_ROWS do
-        local r = rows[i]
-        if r:IsShown() then
-            -- Select first GOOD message for all
-            r.msg1Index = 1
-            r.badMsgIndex = nil
-            local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
-            if #msg1List > 0 then
-                UIDropDownMenu_SetSelectedID(r.dropdown, 1)
-                UIDropDownMenu_SetText(r.dropdown, msg1List[1])
-            end
-            if r.badDropdown then
-                UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
-            end
-            UpdateCheckboxVisibility(r)
-            if SSW.UI.UpdateRowPreview then SSW.UI.UpdateRowPreview(r) end
-        end
-    end
-end)
 
 -- None button handler
 btnNone:SetScript("OnClick", function()
@@ -551,90 +439,24 @@ btnNone:SetScript("OnClick", function()
             -- Reset both dropdowns
             r.msg1Index = nil
             r.badMsgIndex = nil
-            UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
-            if r.badDropdown then
-                UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
-            end
+            UIDropDownMenu_SetText(r.dropdown, "Choose one...")
             UpdateCheckboxVisibility(r)
-            if r.preview then r.preview:SetText("") end
         end
     end
 end)
 
 -- =========================================
--- Preview update
+-- Preview update (Deprecated - kept for compatibility)
 -- =========================================
+-- These functions were used for per-row preview text which has been removed from the UI.
+-- They are kept as no-ops to prevent errors if external code calls them.
+-- Can be removed in a future version after confirming no dependencies.
 function SSW.UI.UpdateRowPreview(r)
-    if not r or not r:IsShown() then return end
-    if not r.playerName or r.playerName == "" then
-        if r.preview then r.preview:SetText("") end
-        return
-    end
-
-    -- Check if BAD message is selected
-    if r.badMsgIndex and r.badMsgIndex > 0 then
-        local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
-        if #badList > 0 and r.badMsgIndex <= #badList then
-            local badTemplate = badList[r.badMsgIndex] or "..."
-            
-            -- Strip custom tag if present
-            if type(badTemplate) == "string" and badTemplate:sub(1, #SSW.CUSTOM_TAG) == SSW.CUSTOM_TAG then
-                badTemplate = badTemplate:sub(#SSW.CUSTOM_TAG + 1)
-            end
-            
-            -- Apply placeholders (NO {name})
-            local badMsg = badTemplate
-                :gsub("{role}", r.role or "DPS")
-                :gsub("{spec}", r.specName or "")
-            
-            if r.preview then
-                local ignoreSuffix = ""
-                if r.cbIgnore and r.cbIgnore:GetChecked() then
-                    ignoreSuffix = " |cFFFF8800(will auto-ignore)|r"
-                end
-                r.preview:SetText("|cFFFF4444[BAD MESSAGE]|r " .. badMsg .. ignoreSuffix)
-            end
-        end
-        return
-    end
-
-    -- Check if GOOD message is selected
-    if r.msg1Index and r.msg1Index > 0 then
-        local includeSecond = r.cbBnet:GetChecked()
-
-        local meta = {
-            role = r.role or "NONE",
-            specID = r.specID or 0,
-            msg1Index = r.msg1Index,
-        }
-
-        -- Build messages WITHOUT name parameter
-        local msg1, msg2 = SSW.BuildMessagesForTarget(
-            r.playerName,
-            includeSecond,
-            meta
-        )
-
-        local line = msg1
-        if includeSecond and msg2 ~= "" then line = line .. " |cFF00FF00+|r " .. msg2 end
-
-        if r.preview then 
-            r.preview:SetText("|cFF00FF00[GOOD MESSAGE]|r " .. line)
-        end
-        return
-    end
-    
-    -- No message selected
-    if r.preview then
-        r.preview:SetText("")
-    end
+    -- Preview removed from UI, function kept for compatibility
 end
 
 function SSW.UI.UpdateAllPreviews()
-    for i = 1, SSW.MAX_ROWS do
-        local r = rows[i]
-        if r and r:IsShown() then SSW.UI.UpdateRowPreview(r) end
-    end
+    -- Preview removed from UI, function kept for compatibility
 end
 
 -- Rebuild row message dropdowns when custom messages change
@@ -643,81 +465,18 @@ function SSW.UI.RebuildRowMessageDropdowns()
         local r = rows[i]
         if r and r.dropdown then
             UIDropDownMenu_Initialize(r.dropdown, function(self, level)
-                local selectedIdx = r.msg1Index
                 local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
-                
-                -- Add "None" option
-                local info = UIDropDownMenu_CreateInfo()
-                info.text = "-- None --"
-                info.checked = (selectedIdx == nil)
-                info.func = function()
-                    r.msg1Index = nil
-                    UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
-                    r.badMsgIndex = nil
-                    if r.badDropdown then
-                        UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
-                    end
-                    UpdateCheckboxVisibility(r)
-                    if SSW.UI.UpdateRowPreview then
-                        SSW.UI.UpdateRowPreview(r)
-                    end
-                end
-                UIDropDownMenu_AddButton(info, level)
-                
-                -- Separator
-                local separator = UIDropDownMenu_CreateInfo()
-                separator.text = ""
-                separator.isTitle = true
-                separator.notCheckable = true
-                UIDropDownMenu_AddButton(separator, level)
-                
-                -- Actual messages
-                for idx, txt in ipairs(msg1List) do
-                    local info = UIDropDownMenu_CreateInfo()
-                    info.text = txt
-                    info.checked = (idx == selectedIdx)
-                    info.func = function()
-                        r.msg1Index = idx
-                        UIDropDownMenu_SetSelectedID(r.dropdown, idx)
-                        UIDropDownMenu_SetText(r.dropdown, txt)
-                        r.badMsgIndex = nil
-                        if r.badDropdown then
-                            UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
-                        end
-                        UpdateCheckboxVisibility(r)
-                        if SSW.UI.UpdateRowPreview then
-                            SSW.UI.UpdateRowPreview(r)
-                        end
-                    end
-                    UIDropDownMenu_AddButton(info, level)
-                end
-            end)
-            
-            if r.dropdown:IsShown() and r.msg1Index then
-                local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
-                local idx = r.msg1Index
-                if idx >= 1 and idx <= #msg1List then
-                    UIDropDownMenu_SetText(r.dropdown, msg1List[idx])
-                end
-            end
-        end
-        
-        if r and r.badDropdown and SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
-            UIDropDownMenu_Initialize(r.badDropdown, function(self, level)
-                local selectedIdx = r.badMsgIndex
                 local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
                 
                 -- Add "None" option
                 local info = UIDropDownMenu_CreateInfo()
                 info.text = "-- None --"
-                info.checked = (selectedIdx == nil)
+                info.checked = (r.msg1Index == nil and r.badMsgIndex == nil)
                 info.func = function()
+                    r.msg1Index = nil
                     r.badMsgIndex = nil
-                    UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
+                    UIDropDownMenu_SetText(r.dropdown, "Choose one...")
                     UpdateCheckboxVisibility(r)
-                    if SSW.UI.UpdateRowPreview then
-                        SSW.UI.UpdateRowPreview(r)
-                    end
                 end
                 UIDropDownMenu_AddButton(info, level)
                 
@@ -728,31 +487,52 @@ function SSW.UI.RebuildRowMessageDropdowns()
                 separator.notCheckable = true
                 UIDropDownMenu_AddButton(separator, level)
                 
-                -- Actual messages
-                for idx, txt in ipairs(badList) do
+                -- GOOD messages
+                for idx, txt in ipairs(msg1List) do
                     local info = UIDropDownMenu_CreateInfo()
                     info.text = txt
-                    info.checked = (idx == selectedIdx)
+                    info.checked = (idx == r.msg1Index)
                     info.func = function()
-                        r.badMsgIndex = idx
-                        UIDropDownMenu_SetSelectedID(r.badDropdown, idx)
-                        UIDropDownMenu_SetText(r.badDropdown, txt)
-                        r.msg1Index = nil
-                        UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
+                        r.msg1Index = idx
+                        r.badMsgIndex = nil
+                        UIDropDownMenu_SetText(r.dropdown, txt)
                         UpdateCheckboxVisibility(r)
-                        if SSW.UI.UpdateRowPreview then
-                            SSW.UI.UpdateRowPreview(r)
-                        end
                     end
                     UIDropDownMenu_AddButton(info, level)
                 end
+                
+                -- Separator before BAD messages if BAD mode is enabled
+                if SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() and #badList > 0 then
+                    local separator = UIDropDownMenu_CreateInfo()
+                    separator.text = ""
+                    separator.isTitle = true
+                    separator.notCheckable = true
+                    UIDropDownMenu_AddButton(separator, level)
+                    
+                    -- BAD messages
+                    for idx, txt in ipairs(badList) do
+                        local info = UIDropDownMenu_CreateInfo()
+                        info.text = txt
+                        info.checked = (idx == r.badMsgIndex)
+                        info.func = function()
+                            r.badMsgIndex = idx
+                            r.msg1Index = nil
+                            UIDropDownMenu_SetText(r.dropdown, txt)
+                            UpdateCheckboxVisibility(r)
+                        end
+                        UIDropDownMenu_AddButton(info, level)
+                    end
+                end
             end)
             
-            if r.badDropdown:IsShown() and r.badMsgIndex then
-                local badList = SSW.GetBadModePresetsWithCustom()
-                local idx = r.badMsgIndex
-                if idx >= 1 and idx <= #badList then
-                    UIDropDownMenu_SetText(r.badDropdown, badList[idx])
+            -- Update displayed text
+            if r.dropdown:IsShown() then
+                local msg1List = SSW.GetMsg1WithCustom and SSW.GetMsg1WithCustom() or SSW.MSG1_PRESETS
+                local badList = SSW.GetBadModePresetsWithCustom and SSW.GetBadModePresetsWithCustom() or {}
+                if r.msg1Index and r.msg1Index >= 1 and r.msg1Index <= #msg1List then
+                    UIDropDownMenu_SetText(r.dropdown, msg1List[r.msg1Index])
+                elseif r.badMsgIndex and r.badMsgIndex >= 1 and r.badMsgIndex <= #badList then
+                    UIDropDownMenu_SetText(r.dropdown, badList[r.badMsgIndex])
                 end
             end
         end
@@ -771,19 +551,18 @@ local function ResetRows()
         r.guid       = nil
         r.specID     = nil
         r.role       = nil
-        r.msg1Index  = nil  -- Start with blank dropdown
+        r.msg1Index  = nil
         r.badMsgIndex = nil
         r.pvpUrl     = nil
         r:Hide()
         r.cbBnet:SetChecked(false)
         r.cbBnet:Hide()
+        if r.cbBnetLabel then r.cbBnetLabel:Hide() end
         r.cbIgnore:SetChecked(false)
         r.cbIgnore:Hide()
-        if r.preview then r.preview:SetText("") end
+        if r.cbIgnoreLabel then r.cbIgnoreLabel:Hide() end
         if r.pvpBtn then r.pvpBtn:Hide() end
         if r.nameBtn then r.nameBtn:Hide() end
-        if r.goodLabel then r.goodLabel:Hide() end
-        if r.badLabel then r.badLabel:Hide() end
     end
 end
 
@@ -844,7 +623,7 @@ function SSW.UI.UpdateStatus(isTest)
         sendWin.subText:SetText("|cFF00FFFFSAFE MODE|r - Preview only. No whispers will be sent. Use /ssw arm to enable LIVE mode.")
     end
 
-    sendWin.noteLine:SetText("Select message type (GOOD or BAD) and configure options. Use Selfcheck to view your check-pvp.fr profile.")
+    sendWin.noteLine:SetText("Select a message from the dropdown. Click player names to view their PvP profiles.")
 end
 
 -- =========================================
