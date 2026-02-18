@@ -59,11 +59,19 @@ cbBadMode:SetScript("OnClick", function(self)
     if checked then StaticPopup_Show("SSW_BAD_MODE_WARNING")
     else
         SSW_Config.badModeEnabled = false; SSW.Print("BAD MODE disabled.")
+        if SSW.UI and SSW.UI.RebuildRowMessageDropdowns then
+            SSW.UI.RebuildRowMessageDropdowns()
+        end
         if SSW.UI and SSW.UI.rows then
             for i = 1, SSW.MAX_ROWS do
                 local r = SSW.UI.rows[i]
-                if r and r.badDropdown then r.badDropdown:Hide() end
-                if r and r.cbIgnore then r.cbIgnore:Hide() end
+                -- Reset BAD message selections when disabling BAD MODE
+                if r and r.badMsgIndex then
+                    r.badMsgIndex = nil
+                    if r.dropdown then
+                        UIDropDownMenu_SetText(r.dropdown, "Choose one...")
+                    end
+                end
             end
         end
         UpdateBadCustomBoxesVisibility()
@@ -120,11 +128,8 @@ if not StaticPopupDialogs["SSW_BAD_MODE_WARNING"] then
         button1 = "Yes, Enable", button2 = "Cancel",
         OnAccept = function()
             SSW_Config.badModeEnabled = true; cbBadMode:SetChecked(true); SSW.Print("|cFFFF4444BAD MODE|r enabled. Use responsibly.")
-            if SSW.UI and SSW.UI.rows then
-                for i = 1, SSW.MAX_ROWS do
-                    local r = SSW.UI.rows[i]
-                    if r and r.badDropdown and r:IsShown() then r.badDropdown:Show() end
-                end
+            if SSW.UI and SSW.UI.RebuildRowMessageDropdowns then
+                SSW.UI.RebuildRowMessageDropdowns()
             end
             UpdateBadCustomBoxesVisibility()
         end,
