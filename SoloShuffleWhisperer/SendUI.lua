@@ -11,6 +11,10 @@ local RoleIconTag = SSW.UI.RoleIconTag
 local RoleText = SSW.UI.RoleText
 local GetClassColorStr = SSW.UI.GetClassColorStr
 
+-- Layout constants
+local CHECKBOX_INLINE_X = 150  -- Horizontal position for inline checkboxes after dropdown
+local CHECKBOX_Y = -39         -- Vertical position for inline checkboxes
+
 -- =========================================
 -- SEND WINDOW
 -- =========================================
@@ -231,7 +235,7 @@ for i = 1, SSW.MAX_ROWS do
     -- Checkbox "+ BNet" (only shown when GOOD message selected, inline after dropdown)
     r.cbBnet = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbBnet:SetSize(26, 26)
-    r.cbBnet:SetPoint("TOPLEFT", 150, -39)  -- Positioned inline after dropdown
+    r.cbBnet:SetPoint("TOPLEFT", CHECKBOX_INLINE_X, CHECKBOX_Y)
     r.cbBnet:SetEnabled(true)
     r.cbBnet:Hide()  -- Hidden by default, shown when GOOD message selected
     
@@ -244,7 +248,7 @@ for i = 1, SSW.MAX_ROWS do
     -- Checkbox "Ignore" (only shown when BAD message selected, inline after dropdown)
     r.cbIgnore = CreateFrame("CheckButton", nil, r, "UICheckButtonTemplate")
     r.cbIgnore:SetSize(26, 26)
-    r.cbIgnore:SetPoint("TOPLEFT", 150, -39)  -- Positioned inline after dropdown (same position as cbBnet)
+    r.cbIgnore:SetPoint("TOPLEFT", CHECKBOX_INLINE_X, CHECKBOX_Y)
     r.cbIgnore:SetEnabled(true)
     r.cbIgnore:Hide()  -- Hidden by default, shown when BAD message selected
     
@@ -442,8 +446,11 @@ btnNone:SetScript("OnClick", function()
 end)
 
 -- =========================================
--- Preview update (keeping for compatibility but preview is removed from UI)
+-- Preview update (Deprecated - kept for compatibility)
 -- =========================================
+-- These functions were used for per-row preview text which has been removed from the UI.
+-- They are kept as no-ops to prevent errors if external code calls them.
+-- Can be removed in a future version after confirming no dependencies.
 function SSW.UI.UpdateRowPreview(r)
     -- Preview removed from UI, function kept for compatibility
 end
