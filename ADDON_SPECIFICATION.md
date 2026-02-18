@@ -183,7 +183,7 @@ Messages should be:
 ### 9. PvP Profile Integration
 - **Provider**: check-pvp.fr
 - **Region Detection**: Auto-detects region (US, EU, KR, TW, CN)
-- **URL Format**: `https://check-pvp.fr/{region}/{realm}/{name}`
+- **URL Format**: `https://check-pvp.fr/{region}/{name}-{realm}`
 - **Features**:
   - Click player name to open dialog with copyable URL
   - Hover PvP icon for tooltip about rankings

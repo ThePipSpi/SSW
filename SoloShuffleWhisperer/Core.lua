@@ -97,7 +97,8 @@ function SSW.GetCheckPvpUrl(fullName)
     
     -- Auto-detect region (no user modification needed)
     local region = SSW.GetRegionCode()
-    return ("https://check-pvp.fr/%s/%s/%s"):format(region, realm, name)
+    -- Correct URL format is: https://check-pvp.fr/{region}/{name}-{realm}
+    return ("https://check-pvp.fr/%s/%s-%s"):format(region, name, realm)
 end
 
 function SSW.GetMyBattleTag()
