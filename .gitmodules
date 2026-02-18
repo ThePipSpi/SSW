@@ -1,0 +1,3 @@
+[submodule "libs/whisper-commons"]
+	path = libs/whisper-commons
+	url = https://github.com/ThePipSpi/whisper-commons.git
