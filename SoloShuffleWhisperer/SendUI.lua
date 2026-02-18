@@ -279,7 +279,6 @@ for i = 1, SSW.MAX_ROWS do
             UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
             -- Update checkbox visibility (hide both)
             UpdateCheckboxVisibility(r)
-            CloseDropDownMenus()
             if SSW.UI.UpdateRowPreview then
                 SSW.UI.UpdateRowPreview(r)
             end
@@ -309,7 +308,6 @@ for i = 1, SSW.MAX_ROWS do
                 end
                 -- Update checkbox visibility
                 UpdateCheckboxVisibility(r)
-                CloseDropDownMenus()
                 if SSW.UI.UpdateRowPreview then
                     SSW.UI.UpdateRowPreview(r)
                 end
@@ -347,7 +345,6 @@ for i = 1, SSW.MAX_ROWS do
             UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
             -- Update checkbox visibility (hide both)
             UpdateCheckboxVisibility(r)
-            CloseDropDownMenus()
             if SSW.UI.UpdateRowPreview then
                 SSW.UI.UpdateRowPreview(r)
             end
@@ -375,7 +372,6 @@ for i = 1, SSW.MAX_ROWS do
                 UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
                 -- Update checkbox visibility
                 UpdateCheckboxVisibility(r)
-                CloseDropDownMenus()
                 if SSW.UI.UpdateRowPreview then
                     SSW.UI.UpdateRowPreview(r)
                 end
@@ -662,7 +658,6 @@ function SSW.UI.RebuildRowMessageDropdowns()
                         UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
                     end
                     UpdateCheckboxVisibility(r)
-                    CloseDropDownMenus()
                     if SSW.UI.UpdateRowPreview then
                         SSW.UI.UpdateRowPreview(r)
                     end
@@ -690,7 +685,6 @@ function SSW.UI.RebuildRowMessageDropdowns()
                             UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
                         end
                         UpdateCheckboxVisibility(r)
-                        CloseDropDownMenus()
                         if SSW.UI.UpdateRowPreview then
                             SSW.UI.UpdateRowPreview(r)
                         end
@@ -721,7 +715,6 @@ function SSW.UI.RebuildRowMessageDropdowns()
                     r.badMsgIndex = nil
                     UIDropDownMenu_SetText(r.badDropdown, "Select BAD message...")
                     UpdateCheckboxVisibility(r)
-                    CloseDropDownMenus()
                     if SSW.UI.UpdateRowPreview then
                         SSW.UI.UpdateRowPreview(r)
                     end
@@ -747,7 +740,6 @@ function SSW.UI.RebuildRowMessageDropdowns()
                         r.msg1Index = nil
                         UIDropDownMenu_SetText(r.dropdown, "Select GOOD message...")
                         UpdateCheckboxVisibility(r)
-                        CloseDropDownMenus()
                         if SSW.UI.UpdateRowPreview then
                             SSW.UI.UpdateRowPreview(r)
                         end
