@@ -47,7 +47,7 @@ local function ProcessWhispers(isTest)
     
     -- Check if any BAD messages are selected (only in LIVE mode)
     local hasBadMessages = false
-    if not isTest and SSW.IsArmed() and SSW.IsBadModeEnabled and SSW.IsBadModeEnabled() then
+    if not isTest and SSW.IsArmed() then
         for i = 1, SSW.MAX_ROWS do
             local r = rows[i]
             if r and r:IsShown() and r.badMsgIndex and r.badMsgIndex > 0 then

@@ -12,7 +12,7 @@ local RoleText = SSW.UI.RoleText
 local GetClassColorStr = SSW.UI.GetClassColorStr
 
 -- Layout constants
-local CHECKBOX_INLINE_X = 150  -- Horizontal position for inline checkboxes after dropdown
+local CHECKBOX_INLINE_X = 195  -- Horizontal position for inline checkboxes after dropdown
 local CHECKBOX_Y = -39         -- Vertical position for inline checkboxes
 
 -- =========================================
