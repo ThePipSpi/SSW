@@ -289,7 +289,7 @@ The addon now automatically detects your region using the WoW API:
 ```lua
 -- Auto-detect region (no user modification needed)
 local region = SSW.GetRegionCode()  -- Returns "us", "eu", "kr", "tw", or "cn"
-return ("https://check-pvp.fr/%s/%s/%s"):format(region, realm, name)
+return ("https://check-pvp.fr/%s/%s-%s"):format(region, name, realm)
 ```
 
 ### ⚙️ Core.lua - Adjust Core Settings
