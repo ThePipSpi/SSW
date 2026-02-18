@@ -1,5 +1,12 @@
 -- Snapshot.lua
 -- Captures and manages player data from Solo Shuffle scoreboard
+--
+-- API Changes:
+-- - WoW 11.0+ (The War Within): Uses C_PvP.GetScoreInfo which returns a table
+--   with fields: name, classToken, talentSpec, etc.
+-- - Pre-11.0: Uses deprecated GetBattlefieldScore which returns multiple values
+--
+-- This ensures class colors and spec icons display correctly after arena matches.
 
 SSW = SSW or {}
 
